@@ -61,7 +61,9 @@ int main() {
         int valread = read(new_socket, buffer, 1024);
         if (valread > 0) {
             std::cout << "Message received: " << buffer << std::endl;
-            // hier iets doen met de data	
+            // hier iets doen met de data 
+            // bijvoorbeeld doorsturen naar een ander programma (online voorbeeld gebruikt)	
+            system(("./ServerSend_Pi2 " + std::string(buffer)).c_str());
             }
         else {
             std::cout << "Client disconnected" << std::endl;
