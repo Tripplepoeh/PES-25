@@ -10,9 +10,9 @@ uint8_t i2c_buffer[BUFFERSIZE];
 #define LED_PIN GPIO_PIN_5
 #define LED_PORT GPIOA
 
-void SystemClock_Config(void);
-static void MX_GPIO_Init(void);
-static void MX_I2C1_Init(void);
+SystemClock_Config(void);
+MX_GPIO_Init(void);
+MX_I2C1_Init(void);
 
 int main(void){
     HAL_Init();
