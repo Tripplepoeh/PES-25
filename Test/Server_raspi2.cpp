@@ -13,6 +13,22 @@
 #define I2C_DEV "/dev/i2c-1" // default op pi
 #define SLAVE_ADDR 0x00 // I2C slave address
 
+// Functie om een register te lezen via I2C
+int read_register(int file, uint8_t reg) {
+    // Schrijf het registeradres naar het apparaat
+    if (write(file, &reg, 1) != 1) {
+        perror("Fout bij schrijven van registeradres");
+        return -1;
+    }
+    // Lees 1 byte uit het apparaat
+    uint8_t value;
+    if (read(file, &value, 1) != 1) {
+        perror("Fout bij lezen van waarde");
+        return -1;
+    }
+    return value;
+}
+
 int main () {
     int server_fd, new_socket;
     struct sockaddr_in address;
@@ -59,19 +75,11 @@ int main () {
     }
     std::cout << "verbinding geaccepteerd" << std::endl;
 
- //   // I2C openen
- /*/   int i2c_fd = open(I2C_DEV, O_RDWR);
-    if (i2c_fd < 0){
-        perror("open i2c device");
-        return -1;
-    }
+    // I2C initialiseren
+    int 
 
-    // STM32 selecteren als slave
-    if (ioctl(i2c_fd, I2C_SLAVE, SLAVE_ADDR) < 0){
-        perror("I2C set slave address");
-        return -1;
-    }
-    /*/
+
+
     std::string msg;
     
     while(true){
