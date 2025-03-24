@@ -11,7 +11,7 @@
 
 #define PORT 9090
 #define I2C_DEV "/dev/i2c-1" // default op pi
-#define SLAVE_ADDR 0x00 // I2C slave address
+#define SLAVE_ADDR 0x16 // I2C slave address
 
 // Functie om een register te lezen via I2C
 int read_register(int file, uint8_t reg) {
