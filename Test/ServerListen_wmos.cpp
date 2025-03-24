@@ -14,7 +14,6 @@ int main() {
     int addrlen = sizeof(address);
     char buffer[1024] = {0};
 
-
     // socket aanmaken
     server_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (server_fd == 0) {
@@ -28,7 +27,7 @@ int main() {
     }
 
     address.sin_family = AF_INET;
-    address.sin_addr.s_addr = INADDR_ANY;
+    address.sin_addr.s_addr = inet_addr("192.168.137.123");
     address.sin_port = htons(PORT);
 
     // binden
@@ -45,32 +44,41 @@ int main() {
 
     std::cout << "Server listening on port " << PORT << std::endl;
 
-    // accepteer verbinding
 
-    new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen);
 
-    if (new_socket < 0) {
-        perror("accept");
-        exit(EXIT_FAILURE);
-    }
-
-    std::cout << "New connection accepted" << std::endl;
-
-    while(true) {
-        memset(buffer, 0, sizeof(buffer));
-        int valread = read(new_socket, buffer, 1024);
-        if (valread > 0) {
-            std::cout << "Message received: " << buffer << std::endl;
-            // hier iets doen met de data 
-            // bijvoorbeeld doorsturen naar een ander programma (online voorbeeld gebruikt)	
-            system(("./ServerSend_Pi2 " + std::string(buffer)).c_str());
-            }
-        else {
-            std::cout << "Client disconnected" << std::endl;
-            break;
+    while (true) {
+        // Verbinding accepteren
+        new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen);
+        if (new_socket < 0) {
+            perror("accept");
+            continue;
         }
+        std::cout << "New connection accepted" << std::endl;
+
+        while (true) {
+            memset(buffer, 0, sizeof(buffer));
+            int valread = read(new_socket, buffer, sizeof(buffer));
+
+            // Check of de client verbroken is
+            if(valread <= 0) {
+                std::cout << "Client disconnected, waiting for new connection..." << std::endl;
+                close(new_socket);
+                break;
+            }
+
+            buffer[valread] = '\0';
+
+            // Verwijder ongewenste \r en \n uit buffer
+            std::string msg = buffer;
+            msg.erase(std::remove(msg.begin(), msg.end(), '\n'), msg.end());
+            msg.erase(std::remove(msg.begin(), msg.end(), '\r'), msg.end());
+
+            if (!msg.empty()) {
+                std::cout << "Message received: " << msg << std::endl;
+            }
+        }
+    }
     close(new_socket);
     close(server_fd);
     return 0;
-    }
 }
