@@ -4,16 +4,13 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 
-#define RASPI2_IP "0.0.0.0" // IP address of the Raspberry Pi 2
+#define RASPI2_IP "192.168.137.123" // IP address of the Raspberry Pi 2
 #define RASPI2_PORT 9090 // Port number of the Raspberry Pi 2
 
-int main(int argc, char* argv[]) {
-    if (argc < 2) {
-        std::cerr << "Gebruik ./ServerSend_Pi2 <message>" << std::endl;
-        return -1;
-    }
+int main() {
+    
 
-    std::string message = argv[1];
+    std::string message = "Hoi ik ben sender";
 
     int sock = 0; // Socket file descriptor
     struct sockaddr_in serv_addr; // Struct for the server address
@@ -57,4 +54,3 @@ int main(int argc, char* argv[]) {
     close(sock);
     return 0;
 }
-
