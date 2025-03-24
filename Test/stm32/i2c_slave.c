@@ -3,12 +3,18 @@
 #include "stdio.h"	// For sprintf
 #include "stdlib.h"	// For atoi
 #include "string.h"	// For memset
+#include "servo.h"	// Include the servo header file
+#include "button.h"	// Include the button header file
 
 extern I2C_HandleTypeDef hi2c1;
 
-uint8_t I2C_REGISTERS[0]; // Array for I2C registers
+//Register 0: Status van de drukknop (0 = niet ingedrukt, 1 = ingedrukt).
+//Register 1: Commando voor de servo (0 = inactief, 1 = activeer).
 
-#define RxSIZE 11
+#define NUM_REG 10 // Number of registers
+uint8_t I2C_REGISTERS[NUM_REG] = {0}; // Array for I2C registers
+
+#define RxSIZE 2
 uint8_t RxBuffer[RxSIZE]; // Buffer for received data
 uint8_t rxcount = 0; // Counter for received data
 uint8_t txcount = 0; // Counter for transmitted data
@@ -21,25 +27,36 @@ int countAddr = 0; // Counter for address
 int countrxcplt = 0; // Counter for RX complete
 int countererror = 0; // Counter for error
 
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
+    if(GPIO_Pin == BUTTON_PIN) { // BUTTON_PIN gedefinieerd in button.h
+        I2C_REGISTERS[0] = 1;  // Drukknop ingedrukt: zet register 0 op 1
+    }
+}
+
 int process_data (void)
 {
-	int startREG = RxData[0];  // get the register address
-	int numREG = bytesRrecvd;  // Get the number of registers
-	int endREG = startREG + numREG -1;  // calculate the end register
-	if (endREG>9)  // There are a total of 10 registers (0-9)
-	{
-		// clear everything and return
-		memset(RxData,'\0',RxSIZE);
-		rxcount =0;
-		return 0;
-	}
+    int startREG = RxData[0];       // Registeradres waar de data moet worden weggeschreven
+    int numREG = bytesRrecvd;         // Aantal ontvangen bytes
+    int endREG = startREG + numREG - 1; // Bepaal eindregister
 
-	int indx = 1;  // set the indx to 1 in order to start reading from RxData[1]
-	for (int i=0; i<numREG; i++)
-	{
-		I2C_REGISTERS[startREG++] = RxData[indx++];  // Read the data from RxData and save it in the I2C_REGISTERS
-	}
-	return 1;  // success
+    // Valideer bereik (stel dat registers 0 t/m 9 gebruikt worden)
+    if(endREG >= NUM_REGISTERS) {
+        memset(RxData, '\0', RxSIZE);
+        rxcount = 0;
+        return 0;
+    }
+
+    int indx = 1; // Data start na het registeradres
+    for (int i = 0; i < numREG; i++) {
+        I2C_REGISTERS[startREG++] = RxData[indx++];
+    }
+    
+    // Als het commandoregister (bijv. register 1) de waarde 1 heeft gekregen, activeer dan de servo
+    if(startREG - numREG <= 1 && I2C_REGISTERS[1] == 1) {
+        servo_activate();       // Activeer de servo (deze functie moet je zelf implementeren in servo.c)
+        I2C_REGISTERS[1] = 0;   // Reset het commando na verwerking
+    }
+    return 1;  // Succes
 }
 
 void HAL_I2C_ListenCpltCallback(I2C_HandleTypeDef *hi2c)
@@ -73,7 +90,7 @@ void HAL_I2C_SlaveTxCpltCallback(I2C_HandleTypeDef *hi2c)
 	HAL_I2C_Slave_Seq_Transmit_IT(hi2c, I2C_REGISTERS+startPosition+txcount, 1, I2C_NEXT_FRAME); // Transmit the next byte
 }
 
-oid HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *hi2c)
+void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *hi2c)
 {
 	rxcount++;
 	if (rxcount < RxSIZE)
