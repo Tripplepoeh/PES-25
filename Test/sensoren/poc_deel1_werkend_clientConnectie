@@ -2,20 +2,16 @@
 #include <Servo.h>
 #include <FastLED.h>
 
-
-// Replace with your network credentials
-const char* ssid = "LAPTOP-49B6IC9B 7763";     // Your WiFi SSID
-const char* password = "42H0$o31"; // Your WiFi Password
-const char* serverIP = "192.168.137.123"; // IP of the server
-const int serverPort = 8080; // Port of the server
+// WiFi-gegevens
+const char* ssid = "LAPTOP-49B6IC9B 7763";     
+const char* password = "42H0$o31"; 
+const char* serverIP = "192.168.137.123"; 
+const int serverPort = 8080; 
 WiFiClient client;
-//---------------------------------
 
-//---------------------------------
-#define LED_PIN D0  // Gebruik pin D0 (GPIO16)
+// Hardwaredefinities
+#define LED_PIN D0  
 #define Druk_Sensor A0
-//---------------------------------
-
 #define NUM_LEDS 11
 #define BRIGHTNESS 64
 #define LED_TYPE WS2811
@@ -27,124 +23,93 @@ CRGB leds[NUM_LEDS];
 CRGBPalette16 currentPalette;
 TBlendType currentBlending;
 
-extern CRGBPalette16 myRedWhiteBluePalette;
-extern const TProgmemPalette16 myRedWhiteBluePalette_p PROGMEM;
 static int waarde = 100;
-//---------------------------------
+char buffer[100] = {0};
 
 void setup() {
-  Serial.begin(115200);
-  wifiinit();
-  ledsinit();
-
-
-  
-    
+    Serial.begin(115200);
+    wifiinit();
+    ledsinit();
 }
 
-
 void loop() {
-   digitalWrite(LED_PIN, HIGH);  // Zet LED aan
-  int val = analogRead(Druk_Sensor);
-  Serial.println(val);
-  if (!(val >= 30)) {
-    pasLedAan(0);
-  } else {
-    pasLedAan(1);
-  }
-  FastLED.delay(1000 / UPDATES_PER_SECOND);
+    digitalWrite(LED_PIN, HIGH);
+    int val = analogRead(Druk_Sensor);
 
-  delay(500);
-  client.print("Druksensor: " + val);
+    // Correcte string opbouw
+    snprintf(buffer, sizeof(buffer), "Druksensor: %d", val);
+    Serial.println(buffer);
+
+    // Controleer of client verbonden is en stuur bericht
+    if (client.connected()) {
+        client.print(buffer); // GEEN println(), voorkomt extra \r\n
+    } else {
+        Serial.println("Verbinding met server verbroken, opnieuw verbinden...");
+        if (client.connect(serverIP, serverPort)) {
+            Serial.println("Opnieuw verbonden!");
+        } else {
+            Serial.println("Herverbinden mislukt.");
+        }
+    }
+
+    if (val >= 30) {
+        pasLedAan(0);
+    } else {
+        pasLedAan(1);
+    }
+
+    FastLED.delay(1000 / UPDATES_PER_SECOND);
+    delay(500);
 }
 
 void pasLedAan(int situatie) {
+    if (situatie == waarde) return;
 
-  if(situatie == waarde){
-    return;
-  }
-
-  if (situatie == 1) {
-
-    for (int colorStep = 255; colorStep >= 0; colorStep--) {
-      int r = 255;
-      int g = colorStep;
-      int b = colorStep;
-
-      // Now loop though each of the LEDs and set each one to the current color
-      for (int x = 0; x < NUM_LEDS; x++) {
-        leds[x] = CRGB(r, g, b);
-      }
-
-      // Display the colors we just set on the actual LEDs
-      delay(10);
-      FastLED.show();
-    }
-    waarde = 1;
-    return;
-  }
-  if (situatie == 0) {
     for (int colorStep = 0; colorStep <= 255; colorStep++) {
-      int r = 255;
-      int g = colorStep;
-      int b = colorStep;
+        int r = 255;
+        int g = (situatie == 1) ? colorStep : 255 - colorStep;
+        int b = (situatie == 1) ? colorStep : 255 - colorStep;
 
-      // Now loop though each of the LEDs and set each one to the current color
-      for (int x = 0; x < NUM_LEDS; x++) {
-        leds[x] = CRGB(r, g, b);
-      }
+        for (int x = 0; x < NUM_LEDS; x++) {
+            leds[x] = CRGB(r, g, b);
+        }
 
-      // Display the colors we just set on the actual LEDs
-      delay(10);
-      FastLED.show();
+        delay(10);
+        FastLED.show();
     }
-    waarde = 0;
-    return;
-  }
-}
-  
-
-
-void ledsinit(){
-  pinMode(LED_PIN, OUTPUT);  // Zet D0 als output
-  pinMode(Druk_Sensor, INPUT);
-
-  
-
-  digitalWrite(LED_PIN, HIGH);
-  Serial.println("hello");
-  delay(3000);  // power-up safety delay
-
-  FastLED.addLeds<LED_TYPE, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
-  FastLED.setBrightness(BRIGHTNESS);
-
-  currentPalette = RainbowColors_p;
-  currentBlending = LINEARBLEND;
+    waarde = situatie;
 }
 
-void wifiinit(){
-  WiFi.begin(ssid, password);
-  
-    
+void ledsinit() {
+    pinMode(LED_PIN, OUTPUT);
+    pinMode(Druk_Sensor, INPUT);
+    digitalWrite(LED_PIN, HIGH);
+    Serial.println("hello");
+
+    delay(3000);
+    FastLED.addLeds<LED_TYPE, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
+    FastLED.setBrightness(BRIGHTNESS);
+
+    currentPalette = RainbowColors_p;
+    currentBlending = LINEARBLEND;
+}
+
+void wifiinit() {
+    WiFi.begin(ssid, password);
     Serial.println("Connecting to WiFi");
     while (WiFi.status() != WL_CONNECTED) {
         delay(500);
         Serial.print(".");
     }
-
-    
     Serial.println("\nConnected!");
     Serial.print("IP Address: ");
-    Serial.println(WiFi.localIP()); // Print the assigned IP
+    Serial.println(WiFi.localIP());
 
-   
-
-     if (client.connect(serverIP, serverPort)) {
+    if (client.connect(serverIP, serverPort)) {
         Serial.println("Connected to server");
     } else {
         Serial.println("Connection to server failed");
     }
-    char message[]= "hoi ik ben wemos";
-    client.print(message);
 
+    client.print("hoi ik ben wemos");
 }
