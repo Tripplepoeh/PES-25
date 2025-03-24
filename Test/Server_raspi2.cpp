@@ -34,7 +34,7 @@ int main () {
     }
 
     address.sin_family = AF_INET;
-    address.sin_addr.s_addr = INADDR_ANY;
+    address.sin_addr.s_addr = inet_addr("192.168.137.123");
     address.sin_port = htons(PORT);
 
     // binden socket
@@ -59,8 +59,8 @@ int main () {
     }
     std::cout << "verbinding geaccepteerd" << std::endl;
 
-    // I2C openen
-    int i2c_fd = open(I2C_DEV, O_RDWR);
+ //   // I2C openen
+ /*/   int i2c_fd = open(I2C_DEV, O_RDWR);
     if (i2c_fd < 0){
         perror("open i2c device");
         return -1;
@@ -71,28 +71,30 @@ int main () {
         perror("I2C set slave address");
         return -1;
     }
-
+    /*/
+    std::string msg;
+    
     while(true){
         memset(buffer, 0, sizeof(buffer));
         int valread = read(new_socket, buffer, 1024);
         if (valread > 0 ){
-            std::string msg = buffer;
+            msg = buffer;
             std::cout << "ontvangen: " << msg << std::endl;
-        }
+        
+    
 
-        // I2C write als we PRESSED ontvangen van wmosclient
-        if (msg.find("PRESSED") != std::string::npos){
-            char cmd[] = "LED_ON";
-            if (write(i2c_fd, cmd, sizeof(cmd)) != (int)sizeof(cmd)) {
-                perror("schrijf naar i2c");
-
-            } else {
-                std::cout << "LED aan verzonden naar STM32" << std::endl;
-            }
-        }
-
+//        // I2C write als we PRESSED ontvangen van wmosclient
+//        if (msg.find("PRESSED") != std::string::npos){
+//            char cmd[] = "LED_ON";
+  //          if (write(i2c_fd, cmd, sizeof(cmd)) != (int)sizeof(cmd)) {
+    //            perror("schrijf naar i2c");
+//
+  //          } else {
+    //            std::cout << "LED aan verzonden naar STM32" << std::endl;
+      //      }
+         }
     }
-    close(i2c_fd);
+    //close(i2c_fd);
     close(new_socket);
     close(server_fd);
     return 0;
