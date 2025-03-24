@@ -12,7 +12,7 @@ extern I2C_HandleTypeDef hi2c1;
 //Register 1: Commando voor de servo (0 = inactief, 1 = activeer).
 
 #define NUM_REG 10 // Number of registers
-uint8_t I2C_REGISTERS[NUM_REG] = {0}; // Array for I2C registers
+uint8_t I2C_REGISTERS[NUM_REG] = {0}; // Array for I2C registers (0-9)
 
 #define RxSIZE 2
 uint8_t RxBuffer[RxSIZE]; // Buffer for received data
@@ -21,7 +21,9 @@ uint8_t txcount = 0; // Counter for transmitted data
 uint8_t startPosition = 0; // Start position for received data
 uint8_t bytesRxd = 0; // Number of bytes received
 uint8_t bytesTxd = 0; // Number of bytes transmitted
-
+uint8_t RxData[RxSIZE];
+uint8_t bytesRrecvd = 0;
+uint8_t bytesTransd = 0;
 
 int countAddr = 0; // Counter for address
 int countrxcplt = 0; // Counter for RX complete
