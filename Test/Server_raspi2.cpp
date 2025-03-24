@@ -29,6 +29,16 @@ int read_register(int file, uint8_t reg) {
     return value;
 }
 
+// Functie om een register te beschrijven via I2C
+int write_register(int file, uint8_t reg, uint8_t value) {
+    uint8_t buf[2] = {reg, value};
+    if (write(file, buf, 2) != 2) {
+        perror("Fout bij schrijven naar register");
+        return -1;
+    }
+    return 0;
+}
+
 int main () {
     int server_fd, new_socket;
     struct sockaddr_in address;
