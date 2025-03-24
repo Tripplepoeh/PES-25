@@ -86,9 +86,36 @@ int main () {
     std::cout << "verbinding geaccepteerd" << std::endl;
 
     // I2C initialiseren
-    int 
+    // int file;
 
+    // if ((file = open(I2C_DEV, O_RDWR)) < 0) {
+    //     perror("Fout bij opnenen van I2C device");
+    //     return 1;
+    // }
 
+    // if (ioctl(file, I2C_SLAVE, SLAVE_ADDR) < 0) {
+    //     perror("Fout bij instellen van slave address");
+    //     return 1;
+    // }
+
+    // while (1) {
+    //     int button_state = read_register(file, 0x00);
+    //     if (button_state < 0) {
+    //         fprintf(stderr, "Fout bij lezen van knop status\n");
+    //         sleep(1);
+    //         continue;
+    //     }
+
+    //     if (button_state == 1) {
+    //         std::cout << "Knop is ingedrukt" << std::endl;
+    //     if (write_register(file, 1, 1) < 0){
+    //         perror("Fout bij schrijven naar register");
+    //     }
+    //     if (write_register(file, 0, 0) < 0){
+    //         perror("Fout bij resetten van register");
+    //     }  
+    //     usleep(1000); //poll elke 1ms
+    // }
 
     std::string msg;
     
@@ -101,18 +128,10 @@ int main () {
         
     
 
-//        // I2C write als we PRESSED ontvangen van wmosclient
-//        if (msg.find("PRESSED") != std::string::npos){
-//            char cmd[] = "LED_ON";
-  //          if (write(i2c_fd, cmd, sizeof(cmd)) != (int)sizeof(cmd)) {
-    //            perror("schrijf naar i2c");
-//
-  //          } else {
-    //            std::cout << "LED aan verzonden naar STM32" << std::endl;
-      //      }
+
          }
     }
-    //close(i2c_fd);
+    // close(file);
     close(new_socket);
     close(server_fd);
     return 0;
