@@ -21,9 +21,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "RFIDSensor.h"
-#include <string.h>     // voor memcpy
-#include <stdio.h>      // voor snprintf, printf
+#include <RFIDSensor.hpp>
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -47,7 +46,6 @@ SPI_HandleTypeDef hspi1;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-
 
 /* USER CODE END PV */
 
@@ -97,11 +95,11 @@ int main(void)
   MX_USART2_UART_Init();
   MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
-  RFIDSensorInit();
-  uint8_t* rfidWaarde;
-  int len =0;
-  char recvBuffer[50];
 
+   RFIDSensor RFID;
+   uint8_t* rfidWaarde;
+   int len =0;
+   char recvBuffer[50];
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -111,15 +109,17 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  if(CheckKaart()){
-		rfidWaarde = RFIDSensorWaarde();
-	  	len = snprintf(recvBuffer, sizeof recvBuffer, "\r\n RFID Sensor waarde: %d %d %d %d %d\n", 		rfidWaarde[0], rfidWaarde[1], 		rfidWaarde[2], 	rfidWaarde[3], rfidWaarde[4]);
-	  	HAL_UART_Transmit(&huart2, (uint8_t*)recvBuffer, len, HAL_MAX_DELAY);
-	  	if(CheckToegang()) HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
-	   	HAL_Delay(200);
-	  }
-
-
+	  if(RFID.CheckKaart()){
+	  		rfidWaarde = RFID.RFIDSensorWaarde();
+	  	  	len = snprintf(recvBuffer, sizeof recvBuffer, "\r\n RFID Sensor waarde: %d %d %d %d %d\n", 		rfidWaarde[0], rfidWaarde[1], 		rfidWaarde[2], 	rfidWaarde[3], rfidWaarde[4]);
+	  	  	HAL_UART_Transmit(&huart2, (uint8_t*)recvBuffer, len, HAL_MAX_DELAY);
+	  	  	if(RFID.CheckToegang()){
+	  	  		HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
+	  	  		len = snprintf(recvBuffer, sizeof recvBuffer, "\r\n toegang!");
+	  		  	HAL_UART_Transmit(&huart2, (uint8_t*)recvBuffer, len, HAL_MAX_DELAY);
+	  	  	}
+	  	   	HAL_Delay(200);
+	  	  }
   }
   /* USER CODE END 3 */
 }
@@ -156,7 +156,7 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_MSI;
   RCC_OscInitStruct.PLL.PLLM = 1;
-  RCC_OscInitStruct.PLL.PLLN = 40;
+  RCC_OscInitStruct.PLL.PLLN = 16;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV7;
   RCC_OscInitStruct.PLL.PLLQ = RCC_PLLQ_DIV2;
   RCC_OscInitStruct.PLL.PLLR = RCC_PLLR_DIV2;
@@ -174,7 +174,7 @@ void SystemClock_Config(void)
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_4) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_1) != HAL_OK)
   {
     Error_Handler();
   }
@@ -240,7 +240,7 @@ static void MX_USART2_UART_Init(void)
 
   /* USER CODE END USART2_Init 1 */
   huart2.Instance = USART2;
-  huart2.Init.BaudRate = 38400;
+  huart2.Init.BaudRate = 115200;
   huart2.Init.WordLength = UART_WORDLENGTH_8B;
   huart2.Init.StopBits = UART_STOPBITS_1;
   huart2.Init.Parity = UART_PARITY_NONE;
@@ -277,13 +277,13 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3|GPIO_PIN_4, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0|LD3_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : PA3 PA4 */
-  GPIO_InitStruct.Pin = GPIO_PIN_3|GPIO_PIN_4;
+  /*Configure GPIO pin : PA4 */
+  GPIO_InitStruct.Pin = GPIO_PIN_4;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -302,7 +302,6 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-
 
 /* USER CODE END 4 */
 
