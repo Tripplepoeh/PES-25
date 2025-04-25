@@ -11,7 +11,11 @@ static uint8_t status;
 //variabel om de rfidsensor waardes op te slaan
 static uint8_t opslagRauweWaardes[16];
 //variabel om de rfidsensor waardes om te zetten naar 5 getallen
-static uint8_t RFIDWaarde[5] = {100, 200, 300, 400, 500};
+static uint8_t RFIDWaarde[5];
+//variabel om rfidsensor waardes op te slaan die toegang mogen hebben
+static uint8_t toegangsKaarten[2][5];
+//teller van aantal kaarten die toegang mogen hebben
+static uint8_t aantalKaarten = 0;
 
 
 //functies:
