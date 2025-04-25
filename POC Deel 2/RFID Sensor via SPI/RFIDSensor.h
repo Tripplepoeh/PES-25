@@ -1,32 +1,45 @@
-#ifndef __RFIDSENSOR_H
-#define __RFIDSENSOR_H
+/*
+ * RFIDSensor.hpp
+ *
+ *  Created on: Apr 25, 2025
+ *      Author: aashi
+ */
+
+#ifndef INC_RFIDSENSOR_HPP_
+#define INC_RFIDSENSOR_HPP_
 
 #include <stdio.h>
 #include <stdint.h>
 
+//dit zorgt ervoor dat de compiler de functies van rc522 niet mangled en dat de functies bruikbaar blijven zoals ze heten
+#ifdef __cplusplus
+extern "C" {
+#endif
+#include "RC522.h"    // C-header met MFRC522_Init, MFRC522_Request, etc.
+#ifdef __cplusplus
+}
+#endif
 
-//variabelen:
-//variabel om de statussen van de rfidsensor op te slaan
-static uint8_t status;
-//variabel om de rfidsensor waardes op te slaan
-static uint8_t opslagRauweWaardes[16];
-//variabel om de rfidsensor waardes om te zetten naar 5 getallen
-static uint8_t RFIDWaarde[5];
-//variabel om rfidsensor waardes op te slaan die toegang mogen hebben
-static uint8_t toegangsKaarten[2][5];
-//teller van aantal kaarten die toegang mogen hebben
-static uint8_t aantalKaarten = 0;
+class RFIDSensor {
+private:
+    uint8_t status;
+    uint8_t opslagRauweWaardes[16];
+    uint8_t RFIDWaarde[5];
+    uint8_t toegangsKaarten[2][5]; //opslag kaart waardes die toegang mogen hebben
+    uint8_t aantalKaarten;
+
+public:
+    RFIDSensor(); // constructor om de sensor te initialiseren
+    ~RFIDSensor(); // destructor
+
+    // Functies
+    void RFIDSensorInit();  // Initialisatie van de rfidsensor
+    int CheckKaart();       // Functie die checkt of er een kaart is
+    uint8_t* RFIDSensorWaarde(); // Functie die de rfidsensor waardes omzet in 5 getallen
+    int CheckToegang();     // Functie die checkt of de kaart toegang mag hebben
+};
 
 
-//functies:
-//initialisatie van de rfidsensor
-void RFIDSensorInit();
-//functie die checkt of er een kaart is
-int CheckKaart();
-//functie die de rfidsensor waardes omzet in 5 getallen in een string/char array
-uint8_t* RFIDSensorWaarde();
-//deze functie kijkt of de kaart/tag toegang mag hebben tot het appertement
-int CheckToegang();
 
 
-#endif //__RFIDSENSOR_H
+#endif /* INC_RFIDSENSOR_HPP_ */
