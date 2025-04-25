@@ -21,8 +21,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "RC522.h"
-#include "main.h"
+#include "RFIDSensor.h"
 #include <string.h>     // voor memcpy
 #include <stdio.h>      // voor snprintf, printf
 /* USER CODE END Includes */
@@ -48,15 +47,7 @@ SPI_HandleTypeDef hspi1;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-volatile uint8_t cardDetected = 0;
 
-
-uint8_t status;
-uint8_t str[16];
-uint8_t sNum[5];
-char *msg1 = "Reading From Card\r\n";
-char *msg2 = "Reading From Tag\r\n";
-char *msg3 = "Place card to read\r\n";
 
 /* USER CODE END PV */
 
@@ -106,15 +97,10 @@ int main(void)
   MX_USART2_UART_Init();
   MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
-  HAL_GPIO_WritePin(LD3_GPIO_Port, LD3_Pin, GPIO_PIN_SET);
-  MFRC522_Init();
-  char recvBuffer[100];
-  int rfidWaarde = 0;
+  RFIDSensorInit();
+  uint8_t* rfidWaarde;
   int len =0;
-  static int teller = 0;
-
-
-
+  char recvBuffer[50];
 
   /* USER CODE END 2 */
 
@@ -125,23 +111,15 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-
-	  status = MFRC522_Request(PICC_REQIDL, str);
-	  if(status == MI_OK){
-	  	status = MFRC522_Anticoll(str);
-	  	if (status == MI_OK){
-	  	memcpy(sNum, str, 5);
-	  	HAL_Delay(200);
-	  	 len = snprintf(recvBuffer, sizeof recvBuffer, "nums: %d %d %d %d %d", sNum[0], sNum[1], sNum[2], sNum[3], sNum[4]);
+	  if(CheckKaart()){
+		rfidWaarde = RFIDSensorWaarde();
+	  	len = snprintf(recvBuffer, sizeof recvBuffer, "\r\n RFID Sensor waarde: %d %d %d %d %d\n", 		rfidWaarde[0], rfidWaarde[1], 		rfidWaarde[2], 	rfidWaarde[3], rfidWaarde[4]);
 	  	HAL_UART_Transmit(&huart2, (uint8_t*)recvBuffer, len, HAL_MAX_DELAY);
-	  	HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
-	  	}
+	  	if(CheckToegang()) HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
+	   	HAL_Delay(200);
 	  }
 
-//	  status = MFRC522_Request(PICC_REQIDL, str);
-//	  	status = MFRC522_Anticoll(str);
-//	  	memcpy(sNum, str, 5);
-//	  	HAL_Delay(200);
+
   }
   /* USER CODE END 3 */
 }
@@ -299,20 +277,20 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_8|GPIO_PIN_11, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3|GPIO_PIN_4, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0|LD3_Pin|GPIO_PIN_4, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0|LD3_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : PA3 PA4 PA8 PA11 */
-  GPIO_InitStruct.Pin = GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_8|GPIO_PIN_11;
+  /*Configure GPIO pins : PA3 PA4 */
+  GPIO_InitStruct.Pin = GPIO_PIN_3|GPIO_PIN_4;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PB0 LD3_Pin PB4 */
-  GPIO_InitStruct.Pin = GPIO_PIN_0|LD3_Pin|GPIO_PIN_4;
+  /*Configure GPIO pins : PB0 LD3_Pin */
+  GPIO_InitStruct.Pin = GPIO_PIN_0|LD3_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -324,6 +302,7 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+
 
 /* USER CODE END 4 */
 
