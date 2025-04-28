@@ -7,21 +7,25 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <cstdlib>
+#include <fcntl.h> // open, O_RDONLY, etc.
+#include <sys/stat.h> // mkfifo
+#include <cstdio>
 
-#define PORT 12348
-#define PORT1 9999 // Port number of the Raspberry Pi 2 for the first server
-#define ServerAdres "145.52.127.184"
-#define FIFO_NAME "/tmp/my_fifo"
 
 class Socket {
-protected:
-    int server_fd, opt = 1;
+protected:	
+	int server_fd, new_socket, opt = 1;
     struct sockaddr_in address;
+    int addrlen;
     fd_set socketSet;
-
+    char recvBuffer[512];
+    char sendBuffer[512];
+	
 public:
-    virtual ~Socket() {}
-    void socketInit();
+	Socket();
+    virtual ~Socket();
+    virtual void socketInit(const char* ip, int port) = 0;
+	virtual void handleClient() = 0;
 };
 
 #endif // SOCKET_H
