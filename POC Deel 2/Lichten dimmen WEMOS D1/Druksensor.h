@@ -1,19 +1,21 @@
 #include "Druksensor.h"
 
-// Constructor van de Druksensor-klasse
-// Initialiseert de druksensor en stelt de pin in als invoer.
-Druksensor::Druksensor(uint8_t pin) : _pin(pin) {
-    pinMode(_pin, INPUT); // Zet de pin als input om analoge waarden te lezen.
+// Constructor voor de Druksensor-klasse.
+// Initialiseert de drukgevoelige sensor met de opgegeven pin.
+Druksensor::Druksensor(uint8_t sensorPin)
+    : _sensorPin(sensorPin) {
 }
 
-// Controleer of de druksensor is ingedrukt.
-// Retourneert `true` als de analoge waarde groter of gelijk is aan de drempelwaarde (30).
-bool Druksensor::isPressed() {
-    return analogRead(_pin) >= 30; // Analoge lezing wordt vergeleken met drempelwaarde.
+// Initialiseer de sensor.
+// Stel de opgegeven pin in als een invoer (INPUT) voor het lezen van analoge waarden.
+void Druksensor::begin() {
+    pinMode(_sensorPin, INPUT);
 }
 
-// Lees de huidige analoge waarde van de druksensor.
-// Retourneert de onbewerkte analoge waarde die door de sensor wordt gelezen.
-int Druksensor::getValue() {
-    return analogRead(_pin); // Retourneer de actuele waarde van de pin.
+// Controleer of een persoon is gedetecteerd door de druksensor.
+// Leest de analoge waarde van de sensor en vergelijkt deze met een drempelwaarde.
+// Als de waarde gelijk aan of hoger dan 30 is, wordt aangenomen dat een persoon is gedetecteerd.
+bool Druksensor::isPersonDetected() {
+    int sensorValue = analogRead(_sensorPin);
+    return sensorValue >= 30; // Drempelwaarde om te detecteren
 }
