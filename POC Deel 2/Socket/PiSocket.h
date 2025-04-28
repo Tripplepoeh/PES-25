@@ -1,34 +1,27 @@
 #ifndef PISOCKET_H
 #define PISOCKET_H
 
-#include "Socket.h"
-#include <fcntl.h> // open, O_RDONLY, etc.
-#include <sys/stat.h> // mkfifo
-#include <unistd.h>
-#include <cstring>
-#include <iostream>
+#include "socket.h"
 
 class PiSocket : public Socket {
 private:
     int fifo_fd;
-    int new_socket;
-    struct sockaddr_in address;
-    int addrlen = sizeof(address);
-    char recvBuffer[512];
-    char sendBuffer[512];
+  
 
 public:
     PiSocket();
     ~PiSocket();
-
-    void run();
+	
+    void socketInit(const char* ip, int port);
+	void handleClient();
 
 private:
-    void init();
     void handleConnections();
     void handleSocketRead();
     void handleFifoRead();
-    void sendMessage(const char* message);
+	void sendMessageToFifo(const char* message);
+    void sendMessageToPi(const char* message);
+	
 };
 
 #endif 
