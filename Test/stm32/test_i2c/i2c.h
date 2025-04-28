@@ -11,6 +11,6 @@ extern I2C_HandleTypeDef hi2c1;
 extern uint8_t rx_buf[RX_BUF_SIZE];
 extern uint8_t tx_buf[TX_BUF_SIZE];
 
-// void MX_I2C_Init(void);
+void MX_I2C_Init(void);
 
 #endif /* __I2C_H */
