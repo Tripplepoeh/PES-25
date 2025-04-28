@@ -1,6 +1,15 @@
 #include "PiSocket.h"
+/*#include <sys/select.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <cstring>
+#include <iostream>*/
 
-PiSocket::PiSocket() : fifo_fd(-1), new_socket(-1) {
+using namespace std;
+
+PiSocket::PiSocket() : fifo_fd(-1) {
     memset(recvBuffer, 0, sizeof(recvBuffer));
     memset(sendBuffer, 0, sizeof(sendBuffer));
 }
@@ -8,29 +17,42 @@ PiSocket::PiSocket() : fifo_fd(-1), new_socket(-1) {
 PiSocket::~PiSocket() {
     if (fifo_fd >= 0) close(fifo_fd);
     if (new_socket >= 0) close(new_socket);
-    close(server_fd);
+    if (server_fd >= 0) close(server_fd);
     unlink("/tmp/test_fifo");
 }
 
-void PiSocket::run() {
-    init();
-
-    while (true) {
-        new_socket = accept(server_fd, (struct sockaddr*)&address, (socklen_t*)&addrlen);
-        if (new_socket < 0) {
-            perror("accept");
-            continue;
-        }
-
-        handleConnections();
+void PiSocket::socketInit(const char* ip, int port) {
+    // Init socket
+    server_fd = socket(AF_INET, SOCK_STREAM, 0);
+    if (server_fd == 0) {
+        perror("socket failed");
+        exit(EXIT_FAILURE);
     }
-}
 
-void PiSocket::init() {
-    socketInit(); // Gebruik de Socket moederklasse
+    if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt))) {
+        perror("setsockopt failed");
+        exit(EXIT_FAILURE);
+    }
 
-    // FIFO initialisatie
-    unlink("/tmp/test_fifo");
+    address.sin_family = AF_INET;
+    address.sin_addr.s_addr = inet_addr(ip);
+    address.sin_port = htons(port);
+
+    if (bind(server_fd, (struct sockaddr*)&address, sizeof(address)) < 0) {
+        perror("bind failed");
+        exit(EXIT_FAILURE);
+    }
+
+    if (listen(server_fd, 3) < 0) {
+        perror("listen failed");
+        exit(EXIT_FAILURE);
+    }
+
+    addrlen = sizeof(address);
+    cout << "PiSocket: server listening on port " << port << endl;
+
+    // Init FIFO
+   /* unlink("/tmp/test_fifo");
     if (mkfifo("/tmp/test_fifo", 0666) == -1) {
         perror("mkfifo failed");
         exit(EXIT_FAILURE);
@@ -40,35 +62,52 @@ void PiSocket::init() {
     if (fifo_fd == -1) {
         perror("FIFO open failed");
         exit(EXIT_FAILURE);
-    }
+    }*/
 
-    std::cout << "FIFO initialized at /tmp/test_fifo" << std::endl;
+    cout << "FIFO initialized at /tmp/test_fifo" << endl;
+}
+
+void PiSocket::handleClient() {
+    while (true) {
+        cout << "Waiting for a new client connection..." << endl;
+        new_socket = accept(server_fd, (struct sockaddr*)&address, (socklen_t*)&addrlen);
+        if (new_socket < 0) {
+            perror("accept failed");
+            continue;
+        }
+
+        cout << "New client connected!" << endl;
+        handleConnections();
+    }
 }
 
 void PiSocket::handleConnections() {
     fd_set readfds;
-    int max_fd = (new_socket > fifo_fd) ? new_socket : fifo_fd;
+    int max_fd;
 
     while (true) {
         FD_ZERO(&readfds);
-        FD_SET(new_socket, &readfds);
-        FD_SET(fifo_fd, &readfds);
 
-        struct timeval tv = { 1, 0 }; // 1 second timeout
-        int retval = select(max_fd + 1, &readfds, NULL, NULL, &tv);
+        if (new_socket >= 0) FD_SET(new_socket, &readfds);
+        //if (fifo_fd >= 0) FD_SET(fifo_fd, &readfds);
 
-        if (retval == -1) {
+        //max_fd = (new_socket > fifo_fd) ? new_socket : fifo_fd;
+		max_fd = new_socket;
+		
+        int activity = select(max_fd + 1, &readfds, NULL, NULL, NULL);
+
+        if (activity < 0) {
             perror("select error");
             break;
         }
 
-        if (FD_ISSET(new_socket, &readfds)) {
+        if (new_socket >= 0 && FD_ISSET(new_socket, &readfds)) {
             handleSocketRead();
         }
 
-        if (FD_ISSET(fifo_fd, &readfds)) {
+        /*if (fifo_fd >= 0 && FD_ISSET(fifo_fd, &readfds)) {
             handleFifoRead();
-        }
+        }*/
     }
 }
 
@@ -77,30 +116,35 @@ void PiSocket::handleSocketRead() {
     int valread = read(new_socket, recvBuffer, sizeof(recvBuffer) - 1);
 
     if (valread <= 0) {
-        std::cout << "Client disconnected from socket" << std::endl;
+        cout << "Client disconnected" << endl;
         close(new_socket);
         new_socket = -1;
-    }
-    else {
+    } else {
         recvBuffer[valread] = '\0';
-        std::cout << "Socket: " << recvBuffer << std::endl;
+        cout << "Received from socket: " << recvBuffer << endl;
+        sendMessageToFifo(recvBuffer);
     }
 }
 
 void PiSocket::handleFifoRead() {
-    char buf[512];
+    /*char buf[512];
     ssize_t n = read(fifo_fd, buf, sizeof(buf) - 1);
 
     if (n > 0) {
         buf[n] = '\0';
-        std::cout << "FIFO: " << buf;
-        sendMessage(buf);
-    }
+        cout << "Received from FIFO: " << buf;
+        sendMessageToPi(buf);
+    }*/
 }
 
-void PiSocket::sendMessage(const char* message) {
+void PiSocket::sendMessageToFifo(const char* message) {
+    // Hier zou normaal een aparte write naar een tweede FIFO gebeuren als het nodig is
+    cout << "Sending message to FIFO not implemented (no FIFO write fd)" << endl;
+}
+
+void PiSocket::sendMessageToPi(const char* message) {
     if (new_socket >= 0 && message[0] != '\0') {
         send(new_socket, message, strlen(message), 0);
-        std::cout << "Sent to PiSocket Client: " << message << std::endl;
+        cout << "Sent to PiSocket Client: " << message << endl;
     }
 }
