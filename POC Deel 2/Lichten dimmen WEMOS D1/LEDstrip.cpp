@@ -1,99 +1,111 @@
 #include "LEDstrip.h"
 #include <FastLED.h>
+#include <Arduino.h>
 
-#define LED_PIN D0
-#define Druk_Sensor A0
-#define NUM_LEDS 9
-#define BRIGHTNESS 64
-#define LED_TYPE WS2811
-#define COLOR_ORDER GRB
-CRGB leds[NUM_LEDS];
+// Definitie van enkele constante parameters
+#define BRIGHTNESS 155  // Maximale helderheid van de LED-strip
+#define LED_TYPE WS2811  // Type LED-strip (in dit geval WS2811)
+#define COLOR_ORDER GRB  // Kleurvolgorde van de LED-strip: groen-rood-blauw
+#define LED_PIN D0       // Pin waarop de LED-strip is aangesloten
+#define NUM_LEDS 9       // Aantal LEDs in de LED-strip
 
-LEDstrip::LEDstrip(uint8_t pin, uint16_t numLeds)
-  : _pin(pin), _numLeds(numLeds), _currentState(0) {
-  _leds = new CRGB[_numLeds];
+// Constructor van de BedLightController-klasse
+// Initialiseert de LED-strip, druksensor en andere variabelen.
+BedLightController::BedLightController(uint8_t ledPin, uint16_t numLeds, uint8_t sensorPin)
+    : _ledPin(ledPin), _numLeds(numLeds), _druksensor(sensorPin), // Initialisatie van de LED-strip en druksensor
+      _waarde(100), _bedDetectedTime(0), _isDimming(false), _lightsOff(false) { // Initialisatie van interne statusvariabelen
+    _leds = new CRGB[_numLeds]; // Dynamisch geheugen toewijzen voor de LED-array
 }
 
-void LEDstrip::init() {
-  pinMode(_pin, OUTPUT);
-  // Call addLeds with a runtime pin argument instead of a template argument
-  // FastLED.addLeds<WS2811, _pin, GRB>(_leds, _numLeds).setCorrection(TypicalLEDStrip);
-  FastLED.addLeds<WS2811, D0, GRB>(_leds, _numLeds).setCorrection(TypicalLEDStrip);
-  ;  // Replace `6` with the actual pin number for hardware SPI if needed
-  //FastLED.addLeds<LED_TYPE, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
-
-  FastLED.setBrightness(64);
+// Initialiseer de hardware en start de seriële communicatie
+void BedLightController::begin() {
+    Serial.begin(115200); // Start seriële communicatie voor debugging
+    ledsinit();           // Initialiseer de LED-strip
+    _druksensor.begin();  // Initialiseer de druksensor
 }
 
-void LEDstrip::setColor(int situation) {
-  if (_currentState == situation) return;
-
-
-  if (_currentState == -1 && situation == 1) {
-    lichtAan();
-    _currentState = situation;
-    return;
-  }
-  _currentState = situation;
-
-  for (int colorStep = 0; colorStep <= 255; colorStep++) {
-    r = 255;
-    g = (situation == 1) ? colorStep : 255 - colorStep;
-    b = (situation == 1) ? colorStep : 255 - colorStep;
-
-    for (int i = 0; i < _numLeds; i++) {
-      _leds[i] = CRGB(r, g, b);
+// Update de status van de LED-strip en druksensor
+void BedLightController::update() {
+    if (_lightsOff) {
+        // Als de lichten uit zijn, doe niets
+        return;
     }
 
-    FastLED.show();
-    delay(10);
-  }
-}
+    if (_druksensor.isPersonDetected()) {
+        // Als de druksensor een persoon detecteert
+        if (!_isDimming) {
+            _isDimming = true; // Begin met dimmen
+            _bedDetectedTime = millis(); // Start de timer bij detectie
+        }
+        
+        // Dim de lichten zolang de sensor is ingedrukt
+        dimLights();
 
-void LEDstrip::update() {
-  FastLED.show();
-}
-
-void LEDstrip::lichtUit() {
-  // Bepaal de huidige helderheid van 1 LED als startpunt
-  int startR = _leds[0].r;
-  int startG = _leds[0].g;
-  int startB = _leds[0].b;
-
-  for (int fade = 0; fade <= startR || fade <= startG || fade <= startB; fade++) {
-    int r = (startR - fade) < 0 ? 0 : startR - fade;
-    int g = (startG - fade) < 0 ? 0 : startG - fade;
-    int b = (startB - fade) < 0 ? 0 : startB - fade;
-
-    for (int i = 0; i < _numLeds; i++) {
-      _leds[i] = CRGB(r, g, b);
+        // Zet de lichten uit als de sensor 10 seconden is ingedrukt
+        if (millis() - _bedDetectedTime >= 10000UL) {
+            turnOffLights();
+        }
+    } else {
+        // Herstel wit licht als de sensor wordt losgelaten
+        if (_isDimming) {
+            _isDimming = false; // Stop met dimmen
+        }
+        restoreWhiteLight();
     }
 
-    FastLED.show();
-    delay(10);
-  }
-
-  _currentState = -1;
+    // Voeg een kleine vertraging toe voor een vloeiende update
+    FastLED.delay(10);
 }
 
-void LEDstrip::lichtAan() {
-  // Bepaal de huidige helderheid van 1 LED als startpunt
-  int startR = _leds[0].r;
-  int startG = _leds[0].g;
-  int startB = _leds[0].b;
+// Initialiseer de LED-strip
+void BedLightController::ledsinit() {
+    pinMode(_ledPin, OUTPUT);       // Stel de LED-pin in als uitgang
+    digitalWrite(_ledPin, HIGH);   // Zet de pin hoog als standaardwaarde
 
-  for (int fade = 0; fade < 255; fade++) {
-    int r = startR + fade;
-    int g = startG + fade;
-    int b = startB + fade;
+    delay(3000); // Vertraging voor stabilisatie
+    FastLED.addLeds<LED_TYPE, LED_PIN, COLOR_ORDER>(_leds, NUM_LEDS).setCorrection(TypicalLEDStrip); // Configureer de LED-strip
+    FastLED.setBrightness(BRIGHTNESS); // Stel de helderheid in
 
+    // Start met de LED-strip in wit licht
     for (int i = 0; i < _numLeds; i++) {
-      _leds[i] = CRGB(r, g, b);
+        _leds[i] = CRGB::White; // Zet elke LED op wit
     }
+    FastLED.show(); // Laat de wijziging zien
+}
 
-    FastLED.show();
-    delay(10);
-  }
+// Zet alle lichten uit door ze zwart te maken
+void BedLightController::turnOffLights() {
+    for (int i = 0; i < _numLeds; i++) {
+        _leds[i] = CRGB::Black; // Zet elke LED op zwart
+    }
+    FastLED.show(); // Laat de wijziging zien
+    _lightsOff = true; // Markeer dat de lichten uit zijn
+}
 
-  _currentState = -1;
+// Dim de lichten geleidelijk
+void BedLightController::dimLights() {
+    static uint8_t currentBrightness = BRIGHTNESS; // Start met de maximale helderheid
+
+    if (currentBrightness > 10) {  // Zorg dat de helderheid niet volledig naar 0 gaat
+        currentBrightness -= 2; // Verminder de helderheid
+        FastLED.setBrightness(currentBrightness); // Pas de helderheid van de LED-strip aan
+        FastLED.show(); // Laat de wijziging zien
+    }
+}
+
+// Herstel het witte licht met een geleidelijke overgang
+void BedLightController::restoreWhiteLight() {
+    static uint8_t currentBrightness = 0; // Start met een lage helderheid
+
+    if (currentBrightness < BRIGHTNESS) {
+        currentBrightness += 5; // Verhoog de helderheid
+        if (currentBrightness > BRIGHTNESS) currentBrightness = BRIGHTNESS; // Zorg dat de helderheid niet boven de maximale waarde gaat
+        FastLED.setBrightness(currentBrightness); // Pas de helderheid van de LED-strip aan
+
+        // Zet alle LEDs terug naar wit
+        for (int i = 0; i < _numLeds; i++) {
+            _leds[i] = CRGB::White; // Zet elke LED op wit
+        }
+        FastLED.show(); // Laat de wijziging zien
+    }
 }
