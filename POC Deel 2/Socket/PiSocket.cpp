@@ -1,11 +1,4 @@
 #include "PiSocket.h"
-/*#include <sys/select.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <cstring>
-#include <iostream>*/
 
 using namespace std;
 
@@ -51,20 +44,16 @@ void PiSocket::socketInit(const char* ip, int port) {
     addrlen = sizeof(address);
     cout << "PiSocket: server listening on port " << port << endl;
 
-    // Init FIFO
-   /* unlink("/tmp/test_fifo");
-    if (mkfifo("/tmp/test_fifo", 0666) == -1) {
-        perror("mkfifo failed");
-        exit(EXIT_FAILURE);
+    
+    mkfifo(FIFO_WRITE, 0666);
+    mkfifo(FIFO_READ, 0666);
+    while ((fifoReadFd = open(FIFO_READ, O_RDONLY | O_NONBLOCK)) == -1) {
+        usleep(100000);
     }
-
-    fifo_fd = open("/tmp/test_fifo", O_RDONLY | O_NONBLOCK);
-    if (fifo_fd == -1) {
-        perror("FIFO open failed");
-        exit(EXIT_FAILURE);
-    }*/
-
-    cout << "FIFO initialized at /tmp/test_fifo" << endl;
+    while ((fifoWriteFd = open(FIFO_WRITE, O_WRONLY | O_NONBLOCK)) == -1) {
+        usleep(100000); 
+    }
+    cout << "FIFO initialized" << endl;
 }
 
 void PiSocket::handleClient() {
@@ -82,18 +71,17 @@ void PiSocket::handleClient() {
 }
 
 void PiSocket::handleConnections() {
-    fd_set readfds;
+   fd_set readfds;
     int max_fd;
 
     while (true) {
         FD_ZERO(&readfds);
 
         if (new_socket >= 0) FD_SET(new_socket, &readfds);
-        //if (fifo_fd >= 0) FD_SET(fifo_fd, &readfds);
+        if (fifoReadFd >= 0) FD_SET(fifoReadFd, &readfds);
 
-        //max_fd = (new_socket > fifo_fd) ? new_socket : fifo_fd;
-		max_fd = new_socket;
-		
+        max_fd = max(new_socket, fifoReadFd);
+
         int activity = select(max_fd + 1, &readfds, NULL, NULL, NULL);
 
         if (activity < 0) {
@@ -105,9 +93,9 @@ void PiSocket::handleConnections() {
             handleSocketRead();
         }
 
-        /*if (fifo_fd >= 0 && FD_ISSET(fifo_fd, &readfds)) {
+        if (fifoReadFd >= 0 && FD_ISSET(fifoReadFd, &readfds)) {
             handleFifoRead();
-        }*/
+        }
     }
 }
 
@@ -127,19 +115,25 @@ void PiSocket::handleSocketRead() {
 }
 
 void PiSocket::handleFifoRead() {
-    /*char buf[512];
-    ssize_t n = read(fifo_fd, buf, sizeof(buf) - 1);
+     char buf[512];
+    ssize_t n = read(fifoReadFd, buf, sizeof(buf) - 1);
 
     if (n > 0) {
         buf[n] = '\0';
-        cout << "Received from FIFO: " << buf;
+        cout << "Received from FIFO: " << buf << endl;
         sendMessageToPi(buf);
-    }*/
+    }
 }
 
 void PiSocket::sendMessageToFifo(const char* message) {
-    // Hier zou normaal een aparte write naar een tweede FIFO gebeuren als het nodig is
-    cout << "Sending message to FIFO not implemented (no FIFO write fd)" << endl;
+    if (fifoWriteFd >= 0 && message[0] != '\0') {
+        ssize_t written = write(fifoWriteFd, message, strlen(message));
+        if (written == -1) {
+            perror("Failed to write to FIFO");
+        } else {
+            cout << "Message sent to FIFO: " << message << endl;
+        }
+    }
 }
 
 void PiSocket::sendMessageToPi(const char* message) {
