@@ -1,5 +1,6 @@
 de gegeven code kunnen er sensor waardes gekregen en ingevuld worden
-de volgende inputs zijn geldid:
+
+de volgende inputs zijn geldig:
 set druksensor 19
 get druksensor
 set druksensor 19 get druksensor //alles achter elkaar kan ook hij geeft dan ook een respons op de juiste wijze terug
