@@ -17,3 +17,16 @@ De toegestane sensornamen worden gedefinieerd in `statusControl.h`, in de array 
 
 ```cpp
 const char* sensorNamen[aantalSensoren] = {"druksensor", "noodknop", "plant", "beweging"};
+
+# Toevoegen nieuwe sensor namen
+
+Als je nieuwe sensors wilt toevoegen, moet je dat in de bovenstaande array toevoegen. pas bovendien ook de enum aan in `statusControl.h`, in de array op regel 27:
+
+```cpp
+ enum Sensoren {
+        drukWaarde = 0,   // Sensor 0
+        noodknopWaarde,         // Sensor 1
+        plantWaarde,      // Sensor 2
+        bewegingsWaarde,   // Sensor 3
+        aantalSensoren   // Houdt het aantal sensoren bij
+    };
