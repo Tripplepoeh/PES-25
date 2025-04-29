@@ -3,9 +3,16 @@
 
 #include "socket.h"
 
+#define FIFO_WRITE "/tmp/pi_to_wemosserver"
+#define FIFO_READ "/tmp/wemosserver_to_pi"
+
+
 class PiSocket : public Socket {
 private:
     int fifo_fd;
+    
+    int fifoReadFd = -1;
+    int fifoWriteFd = -1;
   
 
 public:
