@@ -35,6 +35,8 @@ void WemosSocket::socketInit(const char* ip, int port) {
         perror("listen");
         exit(EXIT_FAILURE);
     }
+    
+    status.statuscontroleInit();
 
     cout << "Server listening on port " << port << endl;
 }
@@ -85,8 +87,8 @@ void WemosSocket::handleClient() {
     for (int i = 0; i < MAXCLIENTS; i++) {
         sd = clientSockets[i];
         if (sd > 0 && FD_ISSET(sd, &socketSet)) {
-            memset(recvBuffer, 0, sizeof(recvBuffer)); // Gebruik de recvBuffer uit parent class
-            int valread = read(sd, recvBuffer, sizeof(recvBuffer));
+            memset(recvBuffer, 0, sizeof(recvBuffer)); // Leeg buffer
+            int valread = read(sd, recvBuffer, sizeof(recvBuffer) - 1);
 
             if (valread <= 0) {
                 cout << "Client disconnected, closing socket fd: " << sd << endl;
@@ -95,15 +97,20 @@ void WemosSocket::handleClient() {
                 curSocket--;
             } else {
                 recvBuffer[valread] = '\0';
-
                 cout << "Message received: " << recvBuffer << endl;
 
-                // Direct hele bericht doorsturen
-                //status.checkInput(recvBuffer);
+                // Verwerk input via statuscontrole
+                const char* antwoord = status.parseInput(recvBuffer);
 
-                // Eventueel bevestiging sturen
-                const char* response = "OK";
-                send(sd, response, strlen(response), 0);
+                // Stuur resultaat terug naar client
+                if (antwoord != nullptr && strlen(antwoord) > 0) {
+                    send(sd, antwoord, strlen(antwoord), 0);
+                    cout << "Response sent to client: " << antwoord << endl;
+                } else {
+                    const char* defaultResp = "Onbekend commando of fout.\n";
+                    send(sd, defaultResp, strlen(defaultResp), 0);
+                    cout << "Response sent to client: " << defaultResp << endl;
+                }
             }
         }
     }
