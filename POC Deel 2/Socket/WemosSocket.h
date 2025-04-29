@@ -2,7 +2,7 @@
 #define WEMOSSOCKET_H
 
 #include "socket.h"
-//#include "statuscontrole.h"
+#include "statusControl.h"
 
 #define MAXCLIENTS 5
 
@@ -11,7 +11,7 @@ private:
     int clientSockets[MAXCLIENTS];
     int sd, max_sd, curSocket = 0;
     bool quit = false;
-    //statuscontrole status;
+    statuscontrole status;
 
 public:
     WemosSocket();
