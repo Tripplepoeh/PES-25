@@ -17,6 +17,8 @@ De toegestane sensornamen worden gedefinieerd in `statusControl.h`, in de array 
 
 ```cpp
 const char* sensorNamen[aantalSensoren] = {"druksensor", "noodknop", "plant", "beweging"};
+```
+
 
 # Toevoegen nieuwe sensor namen
 
