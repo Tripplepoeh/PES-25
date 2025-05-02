@@ -1,4 +1,4 @@
-#include "LEDstrip.h"
+#include "BedLightController.h"
 #include <FastLED.h>
 #include <Arduino.h>
 
