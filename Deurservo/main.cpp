@@ -103,7 +103,7 @@ int main(void)
   while (1)
   {
 	 	 // if (doorgestuurdestatus) { //pseudocode, dit moet gebeuren als de deur wordt geopend door een geldige rfid
-	 	  servo.draaiServo(0, 180, 3000);
+	 	  servo.draaiServo(0, 180, 3000); // draai servo 180 graden in 3 seconden
 	 	  HAL_Delay(3000);
 	 	  servo.draaiServo(180, 0, 3000);
 	 	  HAL_Delay(3000);
