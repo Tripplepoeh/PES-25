@@ -6,7 +6,7 @@
  */
 
 #include "deurServo.h"
-extern TIM_HandleTypeDef htim2;
+
 
 deurServo::deurServo(TIM_HandleTypeDef* timer) { // constructor pakt de timer en begint in non-bewegende modus
 	pwmkanaal = timer;
@@ -20,7 +20,6 @@ deurServo::~deurServo() {
 }
 
 void deurServo::setPWM(int pulsbreedte){ // set de CCR 
-	uint32_t pulse = (pulsbreedte * (pwmkanaal->Init.Period + 1)) / 20000;
 	__HAL_TIM_SET_COMPARE(pwmkanaal, TIM_CHANNEL_1, pulse);
 }
 uint32_t deurServo::pwmNaarHoek(int hoek) { // convert de pwmwaarde naar een hoek van 0-180 die de servo moet aannemen
