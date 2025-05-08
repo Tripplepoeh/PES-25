@@ -1,0 +1,1 @@
+stm files luchtkwaliteit, getest en werkend
