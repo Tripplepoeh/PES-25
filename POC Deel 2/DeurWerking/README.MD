@@ -4,7 +4,7 @@ Voor deze code moeten ook de rfid sensor files gebruikt worden wat in de andere 
 
 de pins gaan als volgt van:
 
-RFID sensor pins blijven hetzelfde als in de map staat
+RFID sensor pins blijven hetzelfde als in de map staat  
 Servo 5v -> bord 5v  
 Servo input -> bord D9/PA_8  
 deurknop -> bord A1/PA1  
