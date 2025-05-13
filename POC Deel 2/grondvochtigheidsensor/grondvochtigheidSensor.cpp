@@ -11,13 +11,6 @@ void grondvochtigheidSensor::leesSensor() {
   Serial.println(grondWaarde);
 }
 
-int grondvochtigheidSensor::natOfDroog() {
-  Serial.println(grondWaarde);
-  if (grondWaarde < nat) {
-    return 0; // te nat
-  } else if(grondWaarde >= nat && grondWaarde < droog ){
-    return 2; // perfecte situatie
-  }else{
-    return 1; // is nu te droog en heeft water nodig
-  }
+int grondvochtigheidSensor::getWaarde() {
+  return grondWaarde;
 }
