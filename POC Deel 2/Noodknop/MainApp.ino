@@ -16,6 +16,8 @@ const int BUZZER = D1; //Pin voor de buzzer
 WiFiManager wifiManager(WIFI_SSID, WIFI_PASSWORD, SERVER_IP, SERVER_PORT);  // WiFiManager instantie
 EmergencyButton& knop = EmergencyButton::getInstance();  // EmergencyButton instantie via Singleton patroon
 
+bool helpRequired = false;
+
 void setup() {
     // Start de seriële communicatie voor debugging en logging
     Serial.begin(115200);  
@@ -23,15 +25,19 @@ void setup() {
 
     pinMode(LED_PIN, OUTPUT);  // Zet de LED-pin als uitvoer (om de status van de knop aan te geven)
     pinMode(BUTTON_PIN, INPUT_PULLUP);  // Zet de knop-pin als invoer met interne pull-up weerstand
-    pinMode(BUZZER, OUTPUT); //Zet de buzzer als output
+    pinMode(5, OUTPUT); //Zet de buzzer als output
 }
 
 void loop() {
     static bool lastButtonState = HIGH;  // Bewaart de laatste knopstatus (voor de debounce logica)
     int currentState = digitalRead(BUTTON_PIN);  // Lees de huidige staat van de drukknop
-    if (knop.isPressed()){
-        tone(BUZZER, 1000);
-        delay(100);
+
+    if (helpRequired){
+        Serial.println("Beep!");
+        tone(5, 1000,500);
+        delay(500);
+        noTone(5);
+        delay(500);
     }
     // Controleer of de knop ingedrukt is (drukflank van HIGH naar LOW)
     if (lastButtonState == HIGH && currentState == LOW) {
@@ -42,6 +48,7 @@ void loop() {
             knop.press();
             digitalWrite(LED_PIN, LOW);  // Zet de LED uit om aan te geven dat de noodknop ingedrukt is
             wifiManager.sendData("set noodknop 1\n");  // Verstuur het commando naar de server om de noodknop in te schakelen
+            helpRequired = true;
             delay(100);  // Wacht een beetje zodat de server tijd heeft om het commando te verwerken
             char* recvBuffer = wifiManager.receiveData();  // Ontvang de reactie van de server
 
@@ -54,6 +61,7 @@ void loop() {
             knop.reset();  // Zet de knopstatus terug naar "niet ingedrukt"
             digitalWrite(LED_PIN, HIGH);  // Zet de LED aan om aan te geven dat de noodknop gereset is
             wifiManager.sendData("set noodknop 0");  // Verstuur het commando naar de server om de noodknop uit te schakelen
+            helpRequired = false;
             delay(100);  // Wacht een beetje zodat de server tijd heeft om het commando te verwerken
             char* recvBuffer = wifiManager.receiveData();  // Ontvang de reactie van de server
 
@@ -62,7 +70,7 @@ void loop() {
             Serial.println(recvBuffer);
         }
     }
-
+    Serial.println(helpRequired);
     lastButtonState = currentState;  // Sla de huidige knopstatus op voor de volgende iteratie (voor debounce)
     delay(50);  // Debounce vertraging van 50 ms om onbedoelde meerdere detecties van de knop te voorkomen
 }
