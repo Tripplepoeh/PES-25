@@ -1,44 +1,40 @@
+// statuscontrol.h
 #ifndef STATUSCONTROL_H
 #define STATUSCONTROL_H
 
 #include <vector>
-#include <unordered_map>
 #include <chrono>
 #include <string>
+#include <cstdint>
 
-// Include de definities van alle sensor- en actuator-IDs
 #include "alleDefines.h"
+
+#define FIFO_READ  "/tmp/pi_to_i2cmaster"
+#define FIFO_WRITE "/tmp/i2cmaster_to_pi"
 
 class statuscontrole {
 public:
     statuscontrole();
 
-    const std::vector<uint8_t>& getResponses() const;        // Haal de response buffer op
-    void clearResponses();                                   // Leeg de response buffer
-    void processI2CData(const uint8_t* data, size_t length);  // Verwerk inkomende I2C data
-    //void generateActuatorCommands(std::vector<uint8_t>& cmds); // Genereer actuatorcommando's
-    void addActuatorResponse(uint8_t id, uint8_t val);         // Voeg actuator respons toe aan buffer
+    const std::vector<uint8_t>& getResponses() const;
+    void clearResponses();
+    void processI2CData(const uint8_t* data, size_t length);
+    void handleFifoRead();
+    void sendMessageToFifo();
 
 private:
-    // Hulpvariabelen
-    std::vector<uint8_t> sensorIds;                          // Lijst van sensor-ID's
-    std::vector<std::string> sensorNames;                     // Lijst van sensor namen
-    std::vector<uint32_t> sensorWaarden;                      // Lijst van sensor waarden
-    std::vector<uint32_t> vorigeSensorWaarden;                // Lijst van vorige sensorwaarden
-    std::unordered_map<uint8_t, uint8_t> actuatorStates;      // Lijst van actuatorstatussen
-    std::unordered_map<uint8_t, std::string> actuatorNames;   // Lijst van actuator namen
-    std::chrono::steady_clock::time_point lichtkrantStartTijd; // Tijdstip van de start van de lichtkrant
-    uint8_t lichtkrantStatus;                                // Status van de lichtkrant
+    std::vector<uint8_t> sensorIds;
+    std::vector<std::string> sensorNames;
+    std::vector<uint32_t> sensorWaarden, vorigeSensorWaarden;
+    std::vector<uint8_t> responseBuffer;
+    std::vector<uint8_t> actuatorStates;              // indexed by actuator ID (0-255)
+    std::chrono::steady_clock::time_point lichtkrantStartTijd;
+    uint8_t lichtkrantStatus = 0;
+    int fifoReadFd=-1, fifoWriteFd=-1;
 
-    std::vector<uint8_t> responseBuffer;                      // Buffer voor de response
-
-    // Hulpfuncties
-    int getSensorIndexById(uint8_t id) const;                 // Zoek sensor op basis van ID
-    size_t getSensorDataLength(uint8_t id) const;              // Bepaal de hoeveelheid data voor sensor
-    void processSensorUpdates(const uint8_t* data, size_t& i, size_t length); // Verwerk sensor updates
-    uint32_t combineBytesToValue(const uint8_t* bytes, size_t length);  // Converteer bytes naar waarde
-    void processI2CCommands(const uint8_t* data, size_t& i, size_t length); // Verwerk I2C commando's
-    void recomputeActuators();                                 // Herbereken actuatorstatus
+    void setActuators();
+    void processSensorUpdates(const uint8_t* data, size_t& i, size_t len);
+    void processI2CCommands(const uint8_t* data, size_t& i, size_t len);
 };
 
-#endif
+#endif // STATUSCONTROL_H
