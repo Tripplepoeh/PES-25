@@ -1,4 +1,4 @@
-Deze code bevat de gehele deur werking, maar nog niet geintegreerd met i2c.
+Deze code bevat de gehele deur werking geintegreerd met i2c.
 
 Voor deze code moeten ook de rfid sensor files gebruikt worden wat in de andere map zit. 
 
