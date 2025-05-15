@@ -1,159 +1,125 @@
 #include "statuscontrol.h"
-#include <iostream>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sstream>
+#include <algorithm>
 #include <chrono>
+#include <cctype>
+#include <sys/stat.h>
 
 statuscontrole::statuscontrole() {
-    sensorIds   = { DEURKNOP, NOODKNOP, BUZZERKNOP, DRUKSENSOR, GRONDSENSOR, TEMPSENSOR, RFIDSENSOR, CO2SENSOR, BEWEGINGSENSOR };
-    sensorNames = { "deurknop", "noodknop", "buzzerknop", "druksensor", "grondsensor", "tempsensor", "rfidsensor", "co2sensor", "bewegingsensor" };
-    sensorWaarden.assign(sensorIds.size(), 0);
-    vorigeSensorWaarden.assign(sensorIds.size(), 0);
+    sensorIds   = {DEURKNOP, NOODKNOP, BUZZERKNOP, DRUKSENSOR,
+                   GRONDSENSOR, TEMPSENSOR, RFIDSENSOR, CO2SENSOR, BEWEGINGSENSOR};
+    sensorNames = {"deurknop","noodknop","buzzerknop","druksensor",
+                   "grondsensor","tempsensor","rfidsensor","co2sensor","bewegingsensor"};
+    sensorWaarden.assign(sensorIds.size(),0);
+    vorigeSensorWaarden = sensorWaarden;
 
-    actuatorNames = {
-        { LEDSTRIP, "ledstrip" },{ DEUR,     "deur" },{ DEURSERVO,"deurservo" },{ BUZZER,   "buzzer" },{ LICHTKRANT,   "lichtkrant" },
-        { SPECIALBEHEERDISPLAY, "specialbeheerDisplay" },{ ROODLAMP, "roodlamp" },{ GROENLAMP,"groenlamp" },{ GEELLAMP, "geellamp" }
-    };
-    for (auto &p : actuatorNames) {
-        actuatorStates[p.first] = GA_UIT;
-    }
+    // Initialize actuatorStates for IDs 0-255
+    actuatorStates.assign(256, GA_UIT);
 
+    mkfifo(FIFO_WRITE,0666);
+    mkfifo(FIFO_READ,0666);
+    while((fifoWriteFd=open(FIFO_WRITE,O_WRONLY|O_NONBLOCK))<0) usleep(100000);
+    while((fifoReadFd =open(FIFO_READ, O_RDONLY|O_NONBLOCK))<0) usleep(100000);
     lichtkrantStartTijd = std::chrono::steady_clock::now();
-    lichtkrantStatus = 0;
 }
 
-const std::vector<uint8_t>& statuscontrole::getResponses() const {
-    return responseBuffer;
+const std::vector<uint8_t>& statuscontrole::getResponses() const { return responseBuffer; }
+void statuscontrole::clearResponses() { responseBuffer.clear(); }
+
+void statuscontrole::processI2CData(const uint8_t* d, size_t n) {
+    clearResponses(); size_t i=0;
+    while(i<n && d[i]!=GET_WAARDE && d[i]!=SET_ACTUATOR)
+        processSensorUpdates(d,i,n);
+    setActuators();
+    while(i<n) processI2CCommands(d,i,n);
 }
 
-void statuscontrole::clearResponses() {
-    responseBuffer.clear();
-}
 
-int statuscontrole::getSensorIndexById(uint8_t id) const {
-    for (size_t i = 0; i < sensorIds.size(); ++i) {
-        if (sensorIds[i] == id) return i;
+
+void statuscontrole::processSensorUpdates(const uint8_t* d, size_t& i, size_t n) {
+    uint8_t id = d[i++];
+    size_t len = (id==RFIDSENSOR ? 5 : 2);
+    if(i+len>n) return;
+    uint32_t val=0;
+    for(size_t b=0;b<len;++b) val |= uint32_t(d[i+b]) << (8*b);
+    i+=len;
+    auto it = std::find(sensorIds.begin(),sensorIds.end(),id);
+    if(it!=sensorIds.end()){
+        size_t idx = it - sensorIds.begin();
+        vorigeSensorWaarden[idx] = sensorWaarden[idx];
+        sensorWaarden[idx]       = val;
     }
-    return -1;
 }
 
-size_t statuscontrole::getSensorDataLength(uint8_t id) const {
-    if (id == RFIDSENSOR)
-        return 5;
-    return 2;
+void statuscontrole::processI2CCommands(const uint8_t* d,size_t& i,size_t n) {
+    if(d[i]==GET_WAARDE && ++i<n) {
+        uint8_t aid = d[i++];
+        if(aid==SPECIALBEHEERDISPLAY) {
+            size_t idx = std::find(sensorIds.begin(),sensorIds.end(),CO2SENSOR) - sensorIds.begin();
+            uint16_t v = uint16_t(sensorWaarden[idx]);
+            responseBuffer.insert(responseBuffer.end(),{aid,uint8_t(v),uint8_t(v>>8)});
+        } else {
+            // return the stored actuator state
+            responseBuffer.insert(responseBuffer.end(),{aid, actuatorStates[aid]});
+        }
+    } else if(d[i]==SET_ACTUATOR && i+2<n) {
+        actuatorStates[d[i+1]] = d[i+2];
+        i+=3;
+    } else ++i;
 }
+void statuscontrole::setActuators() {
+    auto get = [&](uint8_t id){ return sensorWaarden[std::find(sensorIds.begin(),sensorIds.end(),id) - sensorIds.begin()]; };
+    if(get(NOODKNOP)) actuatorStates[GEELLAMP] = actuatorStates[BUZZER] = GA_AAN;
+    actuatorStates[ROODLAMP]  = (get(CO2SENSOR)   > 800);
+    actuatorStates[GROENLAMP] = (get(GRONDSENSOR) > 500);
+    actuatorStates[DEURSERVO] = get(DEURKNOP);
 
-void statuscontrole::addActuatorResponse(uint8_t id, uint8_t val) {
-    responseBuffer.push_back(id);
-    responseBuffer.push_back(val);
-}
-
-void statuscontrole::recomputeActuators() {
-    if (sensorWaarden[getSensorIndexById(NOODKNOP)] == 1) {
-        actuatorStates[GEELLAMP] = GA_AAN;
-        actuatorStates[BUZZER]   = GA_AAN;
-    }
-
-    actuatorStates[ROODLAMP] = (sensorWaarden[getSensorIndexById(CO2SENSOR)] > 800) ? GA_AAN : GA_UIT;
-    actuatorStates[GROENLAMP] = (sensorWaarden[getSensorIndexById(GRONDSENSOR)] < 500) ? GA_AAN : GA_UIT;
-    actuatorStates[DEURSERVO] = (sensorWaarden[getSensorIndexById(DEURKNOP)] == 1) ? GA_AAN : GA_UIT;
-
-    // Lichtkrant toggle logica (tussen 0x70 en 0x71)
-    auto nu = std::chrono::steady_clock::now();
-    auto verstreken = std::chrono::duration_cast<std::chrono::seconds>(nu - lichtkrantStartTijd).count();
-    if (verstreken >= 20) {
-        lichtkrantStatus ^= 1; // toggle tussen 0 en 1
-        lichtkrantStartTijd = nu;
+    auto now = std::chrono::steady_clock::now();
+    if(std::chrono::duration_cast<std::chrono::seconds>(now-lichtkrantStartTijd).count()>=20) {
+        lichtkrantStatus ^= 1;
+        lichtkrantStartTijd = now;
     }
     actuatorStates[LICHTKRANT] = 0x70 + lichtkrantStatus;
 
-    uint64_t code = sensorWaarden[getSensorIndexById(RFIDSENSOR)];
-if (code != 0) {
-    if (code == 0xB6C7283364 || code == 0x9120071DAB) {
-        actuatorStates[DEUR] = GA_AAN;
-    } else {
-        actuatorStates[DEUR] = GA_UIT;
+    uint32_t code = get(RFIDSENSOR);
+    if(code) actuatorStates[DEUR] = (code==0xB6C7283364 || code==0x9120071DAB);
+
+    actuatorStates[LEDSTRIP] = !get(BEWEGINGSENSOR);
+    actuatorStates[DEUR]     = get(DEURKNOP);
+    actuatorStates[SPECIALBEHEERDISPLAY] = uint8_t(get(CO2SENSOR) & 0xFF);
+}
+
+void statuscontrole::handleFifoRead() {
+    char buf[512];
+    ssize_t len = read(fifoReadFd, buf, sizeof(buf)-1);
+    if(len<=0) return;
+    buf[len] = '\0';
+    std::istringstream iss(buf);
+    std::string cmd; iss>>cmd;
+    std::transform(cmd.begin(),cmd.end(),cmd.begin(),::tolower);
+    if(cmd=="set"){
+        std::string name; int value;
+        if(!(iss>>name>>value)) return;
+        auto it = std::find(sensorNames.begin(), sensorNames.end(), name);
+        if(it==sensorNames.end()) return;
+        uint8_t id = sensorIds[it - sensorNames.begin()];
+        uint8_t data[3] = {id, uint8_t(value&0xFF), uint8_t((value>>8)&0xFF)};
+        size_t idx=0;
+        processSensorUpdates(data, idx, 3);
+        setActuators();
     }
 }
 
-
-    actuatorStates[LEDSTRIP] = (sensorWaarden[getSensorIndexById(BEWEGINGSENSOR)] == 0) ? GA_AAN : GA_UIT;
-    
-    actuatorStates[DEUR] = (sensorWaarden[getSensorIndexById(DEURKNOP)] == 1) ? GA_AAN : GA_UIT;
-    // SPECIALBEHEERDISPLAY = CO2SENSOR-waarde (16-bit)
-    actuatorStates[SPECIALBEHEERDISPLAY] = static_cast<uint8_t>(sensorWaarden[getSensorIndexById(CO2SENSOR)] & 0xFF); // alleen voor compatibiliteit
-}
-
-void statuscontrole::processSensorUpdates(const uint8_t* data, size_t& i, size_t length) {
-    uint8_t id = data[i++];
-    size_t dataLen = getSensorDataLength(id);
-
-    if (i + dataLen > length) {
-        std::cerr << "Ongeldige data: te weinig bytes voor sensor ID " << std::hex << (int)id << "\n";
-        return;
-    }
-
-    uint32_t waarde = 0;
-    for (size_t b = 0; b < dataLen; ++b) {
-        waarde |= static_cast<uint32_t>(data[i + b]) << (8 * b);  // little endian
-    }
-
-    int sidx = getSensorIndexById(id);
-    if (sidx >= 0) {
-        vorigeSensorWaarden[sidx] = sensorWaarden[sidx];
-        sensorWaarden[sidx] = waarde;
-        std::cout << "Sensor " << sensorNames[sidx] << " updated to " << waarde << "\n";
-    }
-
-    i += dataLen;
-}
-
-void statuscontrole::processI2CCommands(const uint8_t* data, size_t& i, size_t length) {
-    if (data[i] == GET_WAARDE) {
-        i++;
-        if (i < length) {
-            uint8_t actuatorId = data[i++];
-            if (actuatorId == SPECIALBEHEERDISPLAY) {
-                uint16_t waarde = static_cast<uint16_t>(sensorWaarden[getSensorIndexById(CO2SENSOR)]);
-                responseBuffer.push_back(SPECIALBEHEERDISPLAY);
-                responseBuffer.push_back(waarde & 0xFF);
-                responseBuffer.push_back((waarde >> 8) & 0xFF);
-            } else {
-                auto it = actuatorStates.find(actuatorId);
-                if (it != actuatorStates.end()) {
-                    responseBuffer.push_back(actuatorId);
-                    responseBuffer.push_back(it->second);
-                }
-            }
+void statuscontrole::sendMessageToFifo() {
+    std::ostringstream oss;
+    for(size_t i=0;i<sensorIds.size();++i) {
+        if(sensorWaarden[i]!=vorigeSensorWaarden[i]) {
+            oss<<"set "<<sensorNames[i]<<" "<<sensorWaarden[i]<<"\n";
+            vorigeSensorWaarden[i] = sensorWaarden[i];
         }
-    } else if (data[i] == SET_ACTUATOR) {
-        if (i + 2 < length) {
-            uint8_t id = data[i + 1];
-            uint8_t val = data[i + 2];
-            actuatorStates[id] = val;
-            i += 3;
-        } else {
-            i = length;  // Stop bij ongeldige invoer
-        }
-    } else {
-        i++;
     }
+    std::string out = oss.str();
+    if(!out.empty()) write(fifoWriteFd, out.c_str(), out.size());
 }
-void statuscontrole::processI2CData(const uint8_t* data, size_t length) {
-    clearResponses();
-    if (length < 2) return;
-
-    size_t i = 0;
-
-    // Verwerk sensor updates
-    while (i < length && data[i] != GET_WAARDE && data[i] != SET_ACTUATOR) {
-        processSensorUpdates(data, i, length);
-    }
-
-    recomputeActuators();
-
-    // Verwerk I2C-commando's
-    while (i < length) {
-        processI2CCommands(data, i, length);
-    }
-}
-
-
