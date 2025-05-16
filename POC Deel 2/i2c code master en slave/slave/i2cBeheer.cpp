@@ -1,150 +1,110 @@
-/*
- * i2cBeheer.cpp
- *
- *  Created on: May 11, 2025
- *      Author: aashi
- */
-
+// i2cBeheer.cpp
 #include "i2cBeheer.hpp"
-#include "alleDefines.h"
 #include <iostream>
-#include "lamp.h"
-#include "noodknop.h"
 #include <cstring>
+#include "lamp.h"
+#include "deurServo.h"
+#include "deurknop.h"
+#include "alleDefines.h"
+#include "deurServoTest.h"
 
-
-
-I2CBeheer::I2CBeheer() : txLength(0), geelLamp(nullptr), noodk(nullptr) {
+I2CBeheer::I2CBeheer()
+    : txLength(0) {
 }
-
-void I2CBeheer::I2CInit(std::vector<uint8_t> Ids, lamp* gl, noodknop* nk) {
+/*Init functie die een vector verwacht met welke sensoren en actuatoren het bordje heeft
+ * Er moeten ook adressen an de objecten gestuurd worden zodat deze bestuurd kunnen worden door I2CBeheer
+ */
+void I2CBeheer::I2CInit(std::vector<uint8_t> Ids, deurknop *kn, lamp* gl, deurServotest *ser) { 
     sensorIds = Ids;
     txLength = 0;
+    //initialiseer actuatorIds
     actuatorIds = {LEDSTRIP, DEUR, DEURSERVO, BUZZER, LICHTKRANT,
                    SPECIALBEHEERDISPLAY, ROODLAMP, GROENLAMP, GEELLAMP};
+    //koppel binnenkomedende adressen met in de header gedefinieerde objecten
+    knop = kn;
     geelLamp = gl;
-    noodk = nk;
-
-    geelLamp->zetAan();
-    HAL_Delay(1000);
-    geelLamp->zetUit();
+    servo = ser;
 }
 
-//void I2CBeheer::I2CInit(std::vector<uint8_t> Ids, RFIDSensor *rf, deurknop *kn, deurServo *ser){
-//	    sensorIds = Ids;
-//	    txLength = 0;
-//	    actuatorIds = {LEDSTRIP, DEUR, DEURSERVO, BUZZER, LICHTKRANT,
-//	                   SPECIALBEHEERDISPLAY, ROODLAMP, GROENLAMP, GEELLAMP};
-//	    rfid = rf;
-//	    knop = kn;
-//	    servo = ser;
-//}
-
-void I2CBeheer::ProcessReceivedData(uint8_t *data, uint16_t size) {
+void I2CBeheer::ProcessReceivedData(uint8_t* data, uint16_t size) {
+	//Als master vraagt om sensorwaardes en actuatorbesturingen stuur dan alle sensorwaardes en welke actuator waarde je wilt ontvangen
     if (size >= 2 && data[0] == GET_WAARDE && data[1] == SET_ACTUATOR) {
-        setBerichtKlaar();
-        return;
-    } else if (size >= 3 && data[0] == SET_ACTUATOR) {
-        voerUit(data, size);
-        return;
-    } else if (size == 2) {
-        uint8_t id = data[0];
-        uint8_t waarde = data[1];
+        setBerichtKlaar(); 
+    } else {
+        voerUit(data, size); //Anders verwerk het binnenkomende data om actuators aan te st
+    }
+}
 
-        // Vorm tijdelijk SET_ACTUATOR-stijl bericht om bestaande logica te hergebruiken
-        uint8_t nieuwData[3] = {SET_ACTUATOR, id, waarde};
-        voerUit(nieuwData, 3);
+void I2CBeheer::voerUit(uint8_t* data, uint16_t size) {
+    // Er moeten minstens 2 bytes zijn namelijk id en dan waarde
+    if (size < 2) {
         return;
     }
+    //loop door alle paren om hun waardes te krijgen
+    for (uint16_t i = 0; i + 1 < size; i += 2) {
+        uint8_t id    = data[i];
+        uint8_t waarde = data[i + 1];
 
-    std::cerr << "Ongeldig I2C-commando ontvangen.\n";
+        switch (id) {
+            case DEUR:
+                if (servo) {
+                    waarde ? servo->zetAan() : servo->zetUit(); //Aan als waarde 1 if anders uit
+                }
+                break;
+
+            case GROENLAMP:
+                if (geelLamp) {
+                    waarde ? geelLamp->zetAan() : geelLamp->zetUit();//Aan als waarde 1 if anders uit
+                }
+                break;
+
+            // Voeg hier andere actuator cases toe en of vervang de andere cases 
+            default:
+                std::cerr << "Onbekende actuator ID: 0x"
+                          << std::hex << int(id) << "\n";
+                break;
+        }
+    }
 }
 
 
 void I2CBeheer::setBerichtKlaar() {
     txLength = 0;
-
+    //Ga langs alle ids in de vector die in de init is binnengekomen
     for (uint8_t id : sensorIds) {
-        if (txLength + 2 > sizeof(txBericht)) break;
-
+        if (txLength + 2 > sizeof(txBericht)) break; //Check of er genoeg ruimte is in txbericht
         if (actuatorIds.count(id)) {
+        	// Vraag de actuator state op via GET_WAARDE id
             txBericht[txLength++] = GET_WAARDE;
             txBericht[txLength++] = id;
-            continue;
-        }
-
-        txBericht[txLength++] = id;
-
-        uint8_t waardeBytes[5] = {0};
-        int bytesToWrite = (id == RFIDSENSOR) ? 5 : 2;
-
-        switch (id) {
-//            case DEURKNOP: {
-//                uint16_t val = knop ? knop->statusopen() : 0;
-//                waardeBytes[0] = val & 0xFF;
-//                waardeBytes[1] = (val >> 8) & 0xFF;
-//                break;
-//            }
-//            case RFIDSENSOR: {
-//                if (rfid) {
-//                    uint8_t* kaart = rfid->CheckKaart();
-//                    if (kaart) {
-//                        memcpy(waardeBytes, kaart, 5);
-//                    }
-//                }
-//
-//                break;
-//            }
-            case NOODKNOP: {
-            	uint32_t val = noodk->getWaarde();
-            	waardeBytes[0] = val & 0xFF;
-            	waardeBytes[1] = (val >> 8) & 0xFF;
-            	break;
-                       }
-            default:
-                break;
-        }
-
-        if (txLength + bytesToWrite > sizeof(txBericht)) break;
-
-        for (int i = 0; i < bytesToWrite; ++i) {
-            txBericht[txLength++] = waardeBytes[i];
+        } else {
+        	//Haal sensorwaardes op en zet ze in de buffer
+            txBericht[txLength++] = id; //Zet de id van sensor in het bericht
+            uint8_t waardeBytes[5] = {0}; //5 bytes om alle sensorwaardes te kunnen sturen
+            int bytesToWrite = 2;
+            switch (id) {
+                case DEURKNOP: {
+                    uint16_t val = knop ? knop->isOpen() : 0;
+                    waardeBytes[0] = val & 0xFF; //Zet de waarde om in little endian en 2 bytes
+                    waardeBytes[1] = (val >> 8) & 0xFF;
+                    break;
+                }
+                default:
+                    break;
+            }
+            //Zet de sensorwaardes in het bericht
+            if (txLength + bytesToWrite > sizeof(txBericht)) break;
+            for (int i = 0; i < bytesToWrite; ++i) {
+                txBericht[txLength++] = waardeBytes[i];
+            }
         }
     }
 }
-
-
-void I2CBeheer::voerUit(uint8_t *data, uint16_t size) {
-    size_t index = 0;
-
-    while (index + 2 < size && data[index] == SET_ACTUATOR) {
-        uint8_t id = data[index + 1];
-        uint8_t waarde = data[index + 2];
-
-        switch (id) {
-//            case DEUR: {
-//                if (servo) {
-//                    waarde ? servo->zetAan() : servo->zetUit();
-//                }
-//                break;
-//            }
-        case GEELLAMP: {
-        	 waarde ? geelLamp->zetAan() : geelLamp->zetUit();
-                    	break;
-                               }
-            default:
-                std::cerr << "Onbekende actuator ID: " << std::hex << (int)id << "\n";
-                break;
-        }
-
-        index += 3;
-    }
-}
-
+//functie die het bericht teruggeeft aan de i2c code
 const uint8_t* I2CBeheer::getBericht() const {
     return txBericht;
 }
-
+//functie die de lengte van het bericht teruggeeft aan de i2c code
 uint8_t I2CBeheer::getBerichtLength() const {
     return txLength;
 }
