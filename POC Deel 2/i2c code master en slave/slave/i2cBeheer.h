@@ -23,9 +23,9 @@ class deurServo;
 class I2CBeheer {
 public:
     I2CBeheer();
-//   void I2CInit(std::vector<uint8_t> sensorIds, lamp* gl, noodknop* nk);
+    void I2CInit(std::vector<uint8_t> sensorIds, lamp* gl, noodknop* nk);
     //void I2CInit(std::vector<uint8_t> Ids, RFIDSensor *rf, deurknop *kn, deurServo *ser);
-    void I2CInit(std::vector<uint8_t> Ids, /*RFIDSensor *rf*/ deurknop *kn, deurServo *ser);
+
 
     void ProcessReceivedData(uint8_t *data, uint16_t size);
     const uint8_t* getBericht() const;
