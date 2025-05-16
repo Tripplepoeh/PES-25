@@ -111,7 +111,7 @@ void statuscontrole::setActuators() { //Deze functie past de actuatorstates aan 
    if(actuatorStates[DEUR]){ //verzorg dat de rfidsensor geleegd worden nadat er verzekert is gestuurd naar de slave
        std::cout<<"deur is open"<<std::endl;
        teller++;
-       if (teller == 5) sensorWaarden[std::find(sensorIds.begin(), sensorIds.end(), RFIDSENSOR) - sensorIds.begin()] = 0; // reset RFID
+       if (teller >= 5) sensorWaarden[std::find(sensorIds.begin(), sensorIds.end(), RFIDSENSOR) - sensorIds.begin()] = 0; // reset RFID
        }
    
 }
