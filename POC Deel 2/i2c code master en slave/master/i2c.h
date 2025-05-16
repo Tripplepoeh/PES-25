@@ -1,5 +1,5 @@
-#ifndef I2CMASTER_H
-#define I2CMASTER_H
+#ifndef I2CCONTROLLER_H
+#define I2CCONTROLLER_H
 
 #include <vector>
 #include <unordered_map>
@@ -7,8 +7,8 @@
 
 class I2CMaster {
 private:
-    std::unordered_map<int, int> slaveFds;  // mapping: adres ? file descriptor
-    statuscontrole status;                  // gedeeld object
+    std::unordered_map<int, int> slaveFds;  
+    statuscontrole status;            
 
 public:
     I2CMaster();
@@ -17,4 +17,4 @@ public:
     ~I2CMaster();
 };
 
-#endif //I2CMASTER_H
+#endif
