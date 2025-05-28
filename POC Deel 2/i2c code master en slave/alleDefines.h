@@ -17,6 +17,7 @@ static constexpr uint8_t TEMPSENSOR  = 0x27;
 static constexpr uint8_t RFIDSENSOR  = 0x28;
 static constexpr uint8_t CO2SENSOR   = 0x29;
 static constexpr uint8_t BEWEGINGSENSOR = 0x30;
+static constexpr uint8_t LUCHTVSENSOR = 0x31;
 
 // Actuator IDs
 static constexpr uint8_t LEDSTRIP            = 0x40;
