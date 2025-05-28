@@ -2,11 +2,8 @@
 #include "i2cBeheer.hpp"
 #include <iostream>
 #include <cstring>
-#include "lamp.h"
-#include "deurServo.h"
-#include "deurknop.h"
+#include "SHT3X.h"
 #include "alleDefines.h"
-#include "deurServoTest.h"
 
 I2CBeheer::I2CBeheer()
     : txLength(0) {
@@ -14,16 +11,12 @@ I2CBeheer::I2CBeheer()
 /*Init functie die een vector verwacht met welke sensoren en actuatoren het bordje heeft
  * Er moeten ook adressen an de objecten gestuurd worden zodat deze bestuurd kunnen worden door I2CBeheer
  */
-void I2CBeheer::I2CInit(std::vector<uint8_t> Ids, deurknop *kn, lamp* gl, deurServotest *ser) { 
+void I2CBeheer::I2CInit(std::vector<uint8_t> Ids) { 
     sensorIds = Ids;
     txLength = 0;
     //initialiseer actuatorIds
-    actuatorIds = {LEDSTRIP, DEUR, DEURSERVO, BUZZER, LICHTKRANT,
-                   SPECIALBEHEERDISPLAY, ROODLAMP, GROENLAMP, GEELLAMP};
+    actuatorIds = {};
     //koppel binnenkomedende adressen met in de header gedefinieerde objecten
-    knop = kn;
-    geelLamp = gl;
-    servo = ser;
 }
 
 void I2CBeheer::ProcessReceivedData(uint8_t* data, uint16_t size) {
@@ -46,18 +39,6 @@ void I2CBeheer::voerUit(uint8_t* data, uint16_t size) {
         uint8_t waarde = data[i + 1];
 
         switch (id) {
-            case DEUR:
-                if (servo) {
-                    waarde ? servo->zetAan() : servo->zetUit(); //Aan als waarde 1 if anders uit
-                }
-                break;
-
-            case GROENLAMP:
-                if (geelLamp) {
-                    waarde ? geelLamp->zetAan() : geelLamp->zetUit();//Aan als waarde 1 if anders uit
-                }
-                break;
-
             // Voeg hier andere actuator cases toe en of vervang de andere cases 
             default:
                 std::cerr << "Onbekende actuator ID: 0x"
@@ -83,10 +64,26 @@ void I2CBeheer::setBerichtKlaar() {
             uint8_t waardeBytes[5] = {0}; //5 bytes om alle sensorwaardes te kunnen sturen
             int bytesToWrite = 2;
             switch (id) {
-                case DEURKNOP: {
-                    uint16_t val = knop ? knop->isOpen() : 0;
-                    waardeBytes[0] = val & 0xFF; //Zet de waarde om in little endian en 2 bytes
-                    waardeBytes[1] = (val >> 8) & 0xFF;
+                case TEMPSENSOR: {
+                    float temperature;
+                    if (SHT3X_Read(&hi2c3, &temperature, NULL) == HAL_OK) {
+                        int16_t t = (int16_t)(temperature * 100);  // schaal naar centi-graden
+                        waardeBytes[0] =  t        & 0xFF;        // low byte
+                        waardeBytes[1] = (t >> 8)  & 0xFF;        // high byte
+                    } else {
+                        waardeBytes[0] = waardeBytes[1] = 0;
+                    }
+                    break;
+                }
+                case LUCHTVSENSOR: {
+                    float humidity;
+                    if (SHT3X_Read(&hi2c3, NULL, &humidity) == HAL_OK) {
+                        int16_t h = (int16_t)(humidity * 100);    // schaal naar centi-procent
+                        waardeBytes[0] =  h        & 0xFF;        // low byte
+                        waardeBytes[1] = (h >> 8)  & 0xFF;        // high byte
+                    } else {
+                        waardeBytes[0] = waardeBytes[1] = 0;
+                    }
                     break;
                 }
                 default:
