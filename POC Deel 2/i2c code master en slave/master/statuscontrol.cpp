@@ -7,14 +7,15 @@
 #include <cctype>
 #include <sys/stat.h>
 #include <iostream>
+#include "logtodatabase.h"
 
-statuscontrole::statuscontrole() {
+statuscontrole::statuscontrole(logToDatabase* log): logger(log) {
     // Initialiseer sensors in volgorde van gebruik
     sensorIds   = {DEURKNOP, NOODKNOP, BUZZERKNOP, DRUKSENSOR,
-                   GRONDSENSOR, TEMPSENSOR, RFIDSENSOR, CO2SENSOR, BEWEGINGSENSOR};
+                   GRONDSENSOR, TEMPSENSOR, RFIDSENSOR, CO2SENSOR, BEWEGINGSENSOR, LUCHTVSENSOR};
     // Initialiseer de sensorarray in dezelfde volgorde als sensorids
     sensorNames = {"deurknop","noodknop","buzzerknop","druksensor",
-                   "grondsensor","tempsensor","rfidsensor","co2sensor","bewegingsensor"};
+                   "grondsensor","tempsensor","rfidsensor","co2sensor","bewegingsensor", "luchtvsensor"};
     //Geef alle sensorwaardes en oude sensorwaardes een waarde van 0
     sensorWaarden.assign(sensorIds.size(),0);
     vorigeSensorWaarden = sensorWaarden;
@@ -59,13 +60,18 @@ void statuscontrole::processSensorUpdates(const uint8_t* d, size_t& i, size_t n)
         val |= uint64_t(d[i + b]) << (8 * b);
     }
     i += len;
+    
 
     // Zoek de juiste sensor en update zijn vorige en huidige waarde
     auto it = std::find(sensorIds.begin(), sensorIds.end(), id);
     if (it != sensorIds.end()) {
         size_t idx = it - sensorIds.begin();
-        vorigeSensorWaarden[idx] = sensorWaarden[idx];
-        sensorWaarden[idx]       = val;
+       if (id == TEMPSENSOR || id == LUCHTVSENSOR) {
+    float fval = ((double)val) / 100.0;  // Schaal terug naar float
+    sensorWaarden[idx] = fval;           // Sla echte float op
+} else {
+    sensorWaarden[idx] = static_cast<double>(val); // Andere sensors: gewoon als integer opslaan
+}
     }
 }
 
@@ -90,7 +96,7 @@ void statuscontrole::setActuators() { //Deze functie past de actuatorstates aan 
     //Dit is een soort mini functie die gemakkelijk sensorwaarde geeft van sensorids
     auto get = [&](uint8_t id)-> uint64_t{ return static_cast<uint64_t> (sensorWaarden[std::find(sensorIds.begin(),sensorIds.end(),id) - sensorIds.begin()]); };
     //Als noodknop gedrukt moeten de volgende waarde op aan gaan
-    if(get(NOODKNOP)) actuatorStates[GEELLAMP] = actuatorStates[BUZZER] = GA_AAN;
+ 
     actuatorStates[ROODLAMP]  = (get(CO2SENSOR)   > 800);
     actuatorStates[GROENLAMP] = (get(GRONDSENSOR) > 500);
     actuatorStates[DEURSERVO] = get(DEURKNOP);
@@ -101,19 +107,25 @@ void statuscontrole::setActuators() { //Deze functie past de actuatorstates aan 
         lichtkrantStartTijd = now;
     }
     actuatorStates[LICHTKRANT] = 0x70 + lichtkrantStatus;
+ 
 
-    uint64_t  code = get(RFIDSENSOR);
+    double  code = get(RFIDSENSOR);
     actuatorStates[LEDSTRIP] = !get(BEWEGINGSENSOR);
-    actuatorStates[DEUR]     = get(DEURKNOP) || (code==0xB6C7283364 || code==0x9120071DAB); //Doe de deur open als deurknop gedrukt is of rfid sensor die codes heeft
-    actuatorStates[SPECIALBEHEERDISPLAY] = uint8_t(get(CO2SENSOR) & 0xFF);
     
+    actuatorStates[DEUR]     = get(DEURKNOP) || code==793615282944 || code==0x9120071DAB; //Doe de deur open als deurknop gedrukt is of rfid sensor die codes heeft
+    actuatorStates[SPECIALBEHEERDISPLAY] = uint8_t(get(CO2SENSOR) & 0xFF);
+      
+    actuatorStates[BUZZER] = get(NOODKNOP);
+    actuatorStates[GEELLAMP] =get(NOODKNOP);
   
    if(actuatorStates[DEUR]){ //verzorg dat de rfidsensor geleegd worden nadat er verzekert is gestuurd naar de slave
        std::cout<<"deur is open"<<std::endl;
        teller++;
-       if (teller >= 5) sensorWaarden[std::find(sensorIds.begin(), sensorIds.end(), RFIDSENSOR) - sensorIds.begin()] = 0; // reset RFID
+       if (teller >= 5){
+            sensorWaarden[std::find(sensorIds.begin(), sensorIds.end(), RFIDSENSOR) - sensorIds.begin()] = 0; // reset RFID
+            teller = 0;
        }
-   
+   }
 }
 
 void statuscontrole::handleFifoRead() { //Deze functie handelt inkomende data van de fifo pipe die socket data heeft
@@ -121,6 +133,7 @@ void statuscontrole::handleFifoRead() { //Deze functie handelt inkomende data va
     ssize_t len = read(fifoReadFd, buf, sizeof(buf)-1); //lees uit de fifo pipe
     if(len<=0) return; //als fifo pipe leeg is return
     buf[len] = '\0'; //voeg null terminator toe aan het einde van de string data
+    std::cout<<buf<<std::endl;
     std::istringstream iss(buf); //Maak van alles in de string zijn eigen aparte woord die met iss door heen te gaan is
     std::string cmd;
      iss >> cmd; //Lees het eerste woord 
@@ -151,6 +164,7 @@ void statuscontrole::sendMessageToFifo() {
         if(sensorWaarden[i]!=vorigeSensorWaarden[i]) { //stuur alleen door naar de socket als de huidige sensorwaarde niet gelijk is aan de vorige sensorwaardes, dus alleen updates worden gestuurd
             oss<<"set "<<sensorNames[i]<<" "<<sensorWaarden[i]<<"\n"; //Formateer de string naar een set <sensornaam> <sensorwaarde> format 
             vorigeSensorWaarden[i] = sensorWaarden[i];
+            logger->logSensorWaarde(sensorNames[i], sensorWaarden[i]);
         }
     }
     std::string out = oss.str(); //Converteer de oss naar een string
