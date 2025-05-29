@@ -1,0 +1,6 @@
+../Core/Src/buzzerknop.cpp:4:1:Buzzerknop::Buzzerknop()	16	static
+../Core/Src/buzzerknop.cpp:6:1:Buzzerknop::~Buzzerknop()	16	static
+../Core/Src/buzzerknop.cpp:8:6:void Buzzerknop::poll()	24	static
+../Core/Src/buzzerknop.cpp:23:6:void Buzzerknop::gedrukt()	16	static
+../Core/Src/buzzerknop.cpp:34:6:void Buzzerknop::onGedrukt()	16	static
+../Core/Src/buzzerknop.cpp:39:6:bool Buzzerknop::isIngedrukt()	16	static

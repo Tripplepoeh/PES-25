@@ -1,0 +1,3 @@
+../Core/Src/SHT3X.c:16:19:SHT3X_Read	48	static
+../Core/Src/SHT3X.c:36:7:getTempWaarde	4	static
+../Core/Src/SHT3X.c:40:7:getHumidityWaarde	4	static

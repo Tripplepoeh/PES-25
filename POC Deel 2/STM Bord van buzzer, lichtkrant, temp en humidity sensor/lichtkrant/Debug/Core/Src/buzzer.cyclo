@@ -1,0 +1,8 @@
+../Core/Src/buzzer.cpp:6:1:Buzzer::Buzzer(TIM_HandleTypeDef*, uint32_t, uint32_t)	1
+../Core/Src/buzzer.cpp:11:6:void Buzzer::zetAan()	9
+../Core/Src/buzzer.cpp:22:6:void Buzzer::zetUit()	4
+../Core/Src/buzzer.cpp:33:6:void Buzzer::knopAan()	1
+../Core/Src/buzzer.cpp:38:6:void Buzzer::noodknopAan()	1
+../Core/Src/buzzer.cpp:43:6:void Buzzer::knopUit()	1
+../Core/Src/buzzer.cpp:47:6:void Buzzer::noodknopUit()	1
+../Core/Src/buzzer.cpp:51:6:bool Buzzer::isActief() const	1
