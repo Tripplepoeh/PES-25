@@ -5,25 +5,21 @@
  *      Author: aashi
  */
 
-#ifndef INC_I2CBEHEER_HPP_
-#define INC_I2CBEHEER_HPP_
+#ifndef INC_I2CBEHEER_H_
+#define INC_I2CBEHEER_H_
 
 #include "main.h"
 #include <set>
 #include <cstdint>
 #include <vector>
+//#include "SHT3X.h"
 
-class lamp;
-class noodknop;
-
-class RFIDSensor;
-class deurknop;
-class deurServo;
+class Buzzer;
 
 class I2CBeheer {
 public:
     I2CBeheer();
-    void I2CInit(std::vector<uint8_t> sensorIds, lamp* gl, noodknop* nk);
+    void I2CInit(std::vector<uint8_t> sensorIds, Buzzer* buzz);
     //void I2CInit(std::vector<uint8_t> Ids, RFIDSensor *rf, deurknop *kn, deurServo *ser);
 
 
@@ -38,12 +34,7 @@ private:
     std::set<uint8_t> actuatorIds;
     void voerUit(uint8_t *data, uint16_t size);
     void setBerichtKlaar();
-    lamp* geelLamp;
-    noodknop* noodk;
-
-    RFIDSensor *rfid;
-    deurknop *knop;
-    deurServo *servo;
+    Buzzer* buzzer;
 };
 
-#endif /* INC_I2CBEHEER_HPP_ */
+#endif /* INC_I2CBEHEER_H_ */
