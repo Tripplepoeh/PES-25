@@ -3,15 +3,17 @@
 
 #include <vector>
 #include <unordered_map>
-#include "statuscontrol.h"
+//#include "statuscontrol.h"
+
+class statuscontrole;
 
 class I2CMaster {
 private:
     std::unordered_map<int, int> slaveFds;  
-    statuscontrole status;            
+    statuscontrole* status;            
 
 public:
-    I2CMaster();
+    I2CMaster(statuscontrole* st);
     bool init(const std::vector<int>& slaveAddresses);  // Init met alle slaves
     void pollSlaves();  // lees en verwerk per slave
     ~I2CMaster();
