@@ -12,6 +12,6 @@ Temperatuur- en luchtvochtigheidsensor: GND -> GND VCC -> 3.3V SCL -> A6 SDA -> 
 Lichtkrant: GND -> GND VCC -> 3.3V DIN -> D2 CS -> A3 CLK -> A1      
 
 i2c van stm naar pi:
-SDA: D4 pi SDA
-SCL: D5 pi SCL
-GND: GND pi GND
+SDA: D4 pi SDA    
+SCL: D5 pi SCL    
+GND: GND pi GND    
