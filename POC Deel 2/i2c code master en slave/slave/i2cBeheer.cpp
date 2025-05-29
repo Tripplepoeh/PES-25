@@ -1,12 +1,17 @@
 // i2cBeheer.cpp
-#include "i2cBeheer.hpp"
+#include "i2cBeheer.h"
 #include <iostream>
 #include <cstring>
-#include "lamp.h"
-#include "deurServo.h"
-#include "deurknop.h"
+#include "SHT3X.h"
 #include "alleDefines.h"
-#include "deurServoTest.h"
+
+#include "buzzer.h"
+
+#include "../../../Lichtkrant_STM/Core/Inc/SHT3X.h"
+
+#include "main.h"
+extern I2C_HandleTypeDef hi2c3;
+
 
 I2CBeheer::I2CBeheer()
     : txLength(0) {
@@ -14,22 +19,20 @@ I2CBeheer::I2CBeheer()
 /*Init functie die een vector verwacht met welke sensoren en actuatoren het bordje heeft
  * Er moeten ook adressen an de objecten gestuurd worden zodat deze bestuurd kunnen worden door I2CBeheer
  */
-void I2CBeheer::I2CInit(std::vector<uint8_t> Ids, deurknop *kn, lamp* gl, deurServotest *ser) { 
+void I2CBeheer::I2CInit(std::vector<uint8_t> Ids, Buzzer* buzz) {
     sensorIds = Ids;
     txLength = 0;
     //initialiseer actuatorIds
     actuatorIds = {LEDSTRIP, DEUR, DEURSERVO, BUZZER, LICHTKRANT,
-                   SPECIALBEHEERDISPLAY, ROODLAMP, GROENLAMP, GEELLAMP};
-    //koppel binnenkomedende adressen met in de header gedefinieerde objecten
-    knop = kn;
-    geelLamp = gl;
-    servo = ser;
+                       SPECIALBEHEERDISPLAY, ROODLAMP, GROENLAMP, GEELLAMP};
+        //koppel binnenkomedende adressen met in de header gedefinieerde objecten
+       buzzer = buzz;
 }
 
 void I2CBeheer::ProcessReceivedData(uint8_t* data, uint16_t size) {
 	//Als master vraagt om sensorwaardes en actuatorbesturingen stuur dan alle sensorwaardes en welke actuator waarde je wilt ontvangen
     if (size >= 2 && data[0] == GET_WAARDE && data[1] == SET_ACTUATOR) {
-        setBerichtKlaar(); 
+        setBerichtKlaar();
     } else {
         voerUit(data, size); //Anders verwerk het binnenkomende data om actuators aan te st
     }
@@ -46,20 +49,13 @@ void I2CBeheer::voerUit(uint8_t* data, uint16_t size) {
         uint8_t waarde = data[i + 1];
 
         switch (id) {
-            case DEUR:
-                if (servo) {
-                    waarde ? servo->zetAan() : servo->zetUit(); //Aan als waarde 1 if anders uit
-                }
-                break;
-
-            case GROENLAMP:
-                if (geelLamp) {
-                    waarde ? geelLamp->zetAan() : geelLamp->zetUit();//Aan als waarde 1 if anders uit
-                }
-                break;
-
-            // Voeg hier andere actuator cases toe en of vervang de andere cases 
-            default:
+            // Voeg hier andere actuator cases toe en of vervang de andere cases
+        case BUZZER:
+                        if (buzzer) {
+                            waarde ? buzzer->noodknopAan() : buzzer->noodknopUit(); //Aan als waarde 1 if anders uit
+                        }
+                        break;
+        default:
                 std::cerr << "Onbekende actuator ID: 0x"
                           << std::hex << int(id) << "\n";
                 break;
@@ -83,12 +79,21 @@ void I2CBeheer::setBerichtKlaar() {
             uint8_t waardeBytes[5] = {0}; //5 bytes om alle sensorwaardes te kunnen sturen
             int bytesToWrite = 2;
             switch (id) {
-                case DEURKNOP: {
-                    uint16_t val = knop ? knop->isOpen() : 0;
-                    waardeBytes[0] = val & 0xFF; //Zet de waarde om in little endian en 2 bytes
-                    waardeBytes[1] = (val >> 8) & 0xFF;
-                    break;
+                case TEMPSENSOR: {
+                    float temp = getTempWaarde();
+                    uint16_t tempConvert = (uint16_t)(temp * 100);
+                        waardeBytes[0] =  tempConvert        & 0xFF;        // low byte
+                        waardeBytes[1] = (tempConvert >> 8)  & 0xFF;        // high byte
+                        break;
+                    }
+                case LUCHTVSENSOR: {
+                	float humidity = getHumidityWaarde();
+                    uint16_t humidityConvert = (uint16_t)(humidity * 100);
+                	waardeBytes[0] =  humidityConvert        & 0xFF;        // low byte
+                	waardeBytes[1] = (humidityConvert >> 8)  & 0xFF;        // high byte
+                	break;
                 }
+
                 default:
                     break;
             }
@@ -100,6 +105,7 @@ void I2CBeheer::setBerichtKlaar() {
         }
     }
 }
+
 //functie die het bericht teruggeeft aan de i2c code
 const uint8_t* I2CBeheer::getBericht() const {
     return txBericht;
