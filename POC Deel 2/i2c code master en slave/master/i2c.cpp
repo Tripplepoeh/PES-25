@@ -2,12 +2,13 @@
 #include <wiringPiI2C.h>
 #include <unistd.h>
 #include <iostream>
+#include "statuscontrol.h"
 
-I2CMaster::I2CMaster() {}
+I2CMaster::I2CMaster(statuscontrole* st) : status(st)  {}
 
 bool I2CMaster::init(const std::vector<int>& slaveAddresses) {
     for (int addr : slaveAddresses) {
-        int fd = wiringPiI2CSetup(addr);
+        int fd = wiringPiI2CSetup(addr); //Setup alle alle slave adressen
         if (fd == -1) {
             std::cerr << "Kan slave op adres 0x" << std::hex << addr << " niet openen\n";
             return false;
@@ -19,7 +20,10 @@ bool I2CMaster::init(const std::vector<int>& slaveAddresses) {
 }
 
 void I2CMaster::pollSlaves() {
-    for (const auto& [addr, fd] : slaveFds) {
+      // Verwerk eerst eventuele FIFO-opdrachten
+         
+    for (const auto& [addr, fd] : slaveFds) { //Ga door alle slave adressen heen om hun data te ontvangen en verwerken
+        status->handleFifoRead();
         // 1. Verzoek om status: 0x03 0x04
         uint8_t request[2] = { 0x03, 0x04 };
         if (write(fd, request, sizeof(request)) == -1) {
@@ -42,9 +46,12 @@ void I2CMaster::pollSlaves() {
         std::cout << std::dec << "\n";
 
         // 3. Verwerking en actie genereren
-        status.processI2CData(buffer.data(), buffer.size());
+            
+        status->processI2CData(buffer.data(), buffer.size());
 
-        const std::vector<uint8_t>& response = status.getResponses(); // bijv. 0x04 0x48 0x00
+     
+        // Krijg de respons en stuur het naar de slave 
+        const std::vector<uint8_t>& response = status->getResponses(); 
         if (!response.empty()) {
             if (write(fd, response.data(), response.size()) == -1) {
                 std::cerr << "Fout bij verzenden actie naar slave 0x" << std::hex << addr << "\n";
@@ -55,11 +62,12 @@ void I2CMaster::pollSlaves() {
             }
         }
     }
+     status->sendMessageToFifo(); //Stuur nieuwe sensorwaardes naar de socket via fifo
 }
 
 
 I2CMaster::~I2CMaster() {
-    for (const auto& [_, fd] : slaveFds) {
+    for (const auto& [_, fd] : slaveFds) { //Sluit alle slave adressen 
         if (fd != -1) close(fd);
     }
 }
