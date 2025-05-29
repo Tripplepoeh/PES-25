@@ -12,9 +12,12 @@
 #define FIFO_READ  "/tmp/pi_to_i2cmaster"
 #define FIFO_WRITE "/tmp/i2cmaster_to_pi"
 
+class logToDatabase;
+
+
 class statuscontrole {
 public:
-    statuscontrole();
+    statuscontrole(logToDatabase* log);
 
     const std::vector<uint8_t>& getResponses() const;
     void clearResponses();
@@ -25,7 +28,7 @@ public:
 private:
     std::vector<uint8_t> sensorIds, actuatorStates, responseBuffer;
     std::vector<std::string> sensorNames;
-    std::vector<uint64_t> sensorWaarden, vorigeSensorWaarden;
+    std::vector<double> sensorWaarden, vorigeSensorWaarden;
     std::chrono::steady_clock::time_point lichtkrantStartTijd;
     uint8_t lichtkrantStatus = 0;
     int fifoReadFd=-1, fifoWriteFd=-1, teller = 0;
@@ -33,6 +36,7 @@ private:
     void setActuators();
     void processSensorUpdates(const uint8_t* data, size_t& i, size_t len);
     void processI2CCommands(const uint8_t* data, size_t& i, size_t len);
+    logToDatabase* logger;
 };
 
 #endif // STATUSCONTROL_H
