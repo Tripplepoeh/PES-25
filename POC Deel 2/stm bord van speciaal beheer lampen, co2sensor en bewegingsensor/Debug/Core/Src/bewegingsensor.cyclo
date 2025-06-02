@@ -1,0 +1,3 @@
+../Core/Src/bewegingsensor.cpp:12:1:Bewegingssensor::Bewegingssensor(GPIO_TypeDef*, uint16_t)	1
+../Core/Src/bewegingsensor.cpp:16:6:void Bewegingssensor::CheckWaarde()	1
+../Core/Src/bewegingsensor.cpp:22:9:uint8_t Bewegingssensor::GetWaarde() const	1

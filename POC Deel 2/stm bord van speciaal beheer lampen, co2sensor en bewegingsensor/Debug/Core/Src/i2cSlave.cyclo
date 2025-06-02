@@ -1,0 +1,6 @@
+../Core/Src/i2cSlave.cpp:33:6:void HAL_I2C_AddrCallback(I2C_HandleTypeDef*, uint8_t, uint16_t)	6
+../Core/Src/i2cSlave.cpp:72:6:void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef*)	4
+../Core/Src/i2cSlave.cpp:98:6:void HAL_I2C_SlaveTxCpltCallback(I2C_HandleTypeDef*)	2
+../Core/Src/i2cSlave.cpp:108:6:void HAL_I2C_ListenCpltCallback(I2C_HandleTypeDef*)	3
+../Core/Src/i2cSlave.cpp:117:6:void HAL_I2C_ErrorCallback(I2C_HandleTypeDef*)	4
+../Core/Src/i2cSlave.cpp:135:6:void ProcessReceivedData1()	2
