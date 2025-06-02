@@ -8,16 +8,16 @@
 #include "Bewegingssensor.h"
 #include "string.h"
 
-Bewegingssensor::Bewegingssensor(GPIO_TypeDef* gpioPort, uint16_t gpioPin, UART_HandleTypeDef* uartHandle)
-: _gpioPort(gpioPort), _gpioPin(gpioPin), _uart(uartHandle) {}
+Bewegingssensor::Bewegingssensor(GPIO_TypeDef* gpioPort, uint16_t gpioPin, I2C_HandleTypeDef* i2cHandle)
+    : _gpioPort(gpioPort), _gpioPin(gpioPin), _i2c(i2cHandle) {}
 
-void Bewegingssensor::controleerEnVerzend() {
-int status = HAL_GPIO_ReadPin(_gpioPort, _gpioPin);
-const char* msg = (status == 1) ? msgBeweging : msgGeenBeweging;
 
-HAL_UART_Transmit(_uart, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
-const char newline[] = "\r\n";
-HAL_UART_Transmit(_uart, (uint8_t*)newline, strlen(newline), HAL_MAX_DELAY);
+void Bewegingssensor::CheckWaarde() {
+    int status = HAL_GPIO_ReadPin(_gpioPort, _gpioPin);
+    _waarde = (status == GPIO_PIN_SET) ? 0x01 : 0x00;
 }
 
 
+uint8_t Bewegingssensor::GetWaarde() const {
+    return _waarde;
+}
