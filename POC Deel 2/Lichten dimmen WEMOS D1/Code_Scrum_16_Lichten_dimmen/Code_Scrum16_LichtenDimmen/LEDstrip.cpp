@@ -73,6 +73,13 @@ void LEDstrip::lichtUit() {
     FastLED.show();
 }
 
+void LEDstrip::LichtDimmen() {
+    for (int i = 0; i < _numLeds; i++) {
+        _leds[i] = CRGB::Red;
+    }
+    FastLED.show();
+}
+
 void LEDstrip::lichtAan() {
     for (int i = 0; i < _numLeds; i++) {
         _leds[i] = CRGB::White;
