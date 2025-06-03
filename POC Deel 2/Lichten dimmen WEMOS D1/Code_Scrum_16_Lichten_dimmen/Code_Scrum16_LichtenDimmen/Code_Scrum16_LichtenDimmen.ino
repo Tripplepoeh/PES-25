@@ -23,7 +23,7 @@ unsigned long buttonPressTime = 0;
 unsigned long lastSendTime = 0;
 
 const unsigned long sendInterval = 1000;
-const unsigned long autoLightOffDelay = 10000;  // 5 seconden
+const unsigned long autoLightOffDelay = 5000;  // 5 seconden
 
 bool lightIsOff = false;
 bool pendingLightOff = false;
@@ -83,16 +83,27 @@ void loop() {
       buttonPressTime = 0;
       pendingLightOff = false;
     }else if (strncmp(regel, "ledstrip: uit", 13) == 0) {
+      if (!lightIsOff && !pendingLightOff) {
+        buttonPressTime = currentTime;
+        pendingLightOff = true;
+        Serial.println("Server vraagt om licht speciaal. Start 10s timer...");
+      }
       if (!lightIsOff) {
-        ledstrip.lichtUit();
+        ledstrip.LichtDimmen();
         lightIsOff = true;
         Serial.println("Server zegt: licht uit.");
+      }else if (pendingLightOff && (currentTime - buttonPressTime >= autoLightOffDelay)) {
+        ledstrip.lichtUit();
+        lightIsOff = true;
+        pendingLightOff = false;
+        Serial.println("Licht UIT na 10 seconden.");
       }
+      
     }
 
     regel = strtok(NULL, "\n");
   }
 
   ledstrip.update();
-  delay(250);  // Niet te vaak naar server
+  delay(100);  // Niet te vaak naar server
 }
