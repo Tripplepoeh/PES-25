@@ -20,15 +20,13 @@ LEDstrip ledstrip(LED_PIN, NUM_LEDS);
 Druksensor drukSensor(DRUK_SENSOR);
 
 unsigned long buttonPressTime = 0;
-unsigned long lastActivityTime = 0;
 unsigned long lastSendTime = 0;
-unsigned long lightOffTime = 0;
 
 const unsigned long sendInterval = 1000;
-const unsigned long autoLightOnDelay = 5000;  // 5 seconden
+const unsigned long autoLightOffDelay = 10000;  // 5 seconden
 
 bool lightIsOff = false;
-bool pressedPreviously = false;
+bool pendingLightOff = false;
 
 void setup() {
   Serial.begin(115200);
@@ -36,110 +34,65 @@ void setup() {
   wifiManager.wifiInit();
   ledstrip.lichtAan();
   lightIsOff = false;
-  lastActivityTime = millis();
+  buttonPressTime = 0;
+  pendingLightOff = false;
 }
 
 void loop() {
   int rawValue = drukSensor.getValue();
-  //bool pressed = rawValue > 800;
   unsigned long currentTime = millis();
-  // === 4. Data naar server sturen ===
 
+  // === Data naar server sturen ===
   wifiManager.connectToServer();
   char* recvBuffer = wifiManager.receiveData();
-  char buffer[128];  // Initialiseer LED-strip en sensoren
+  char buffer[128];
   snprintf(buffer, sizeof(buffer), "set druksensor %d get ledstrip", rawValue);
   Serial.println(buffer);
   wifiManager.sendData(buffer);
   recvBuffer = wifiManager.receiveData();
-  Serial.println(recvBuffer);
   wifiManager.disconnectFromServer();
-  delay(500);
+  Serial.println(recvBuffer);
 
-
-  lastSendTime = currentTime;
-
-
-
+  // === Serverrespons verwerken ===
   char* regel = strtok(recvBuffer, "\n");
   while (regel != NULL) {
     Serial.print("Verwerkte regel: ");
     Serial.println(regel);
 
-
-    if (strncmp(regel, "ledstrip: uit", 13) == 0) {
-      if (!lightIsOff) {
-        if (buttonPressTime == 0) {
-          buttonPressTime = currentTime;
-          //     Serial.println("in de if statement");
-        }
-
-        if ((currentTime - buttonPressTime >= 5000) && !lightIsOff) {
-          ledstrip.lichtUit();
-          lightIsOff = true;
-          lightOffTime = currentTime;
-          Serial.println("Licht UIT na 5 seconden drukken.");
-        }
-
-        // ledstrip.lichtUit();
-        // lightIsOff = true;
-        // Serial.println("Server zegt: licht UIT.");
+    if (strncmp(regel, "ledstrip: speciaal", 18) == 0) {
+      if (!lightIsOff && !pendingLightOff) {
+        buttonPressTime = currentTime;
+        pendingLightOff = true;
+        Serial.println("Server vraagt om licht speciaal. Start 10s timer...");
       }
-    } else if (strncmp(regel, "ledstrip: aan", 13) == 0) {
+
+      if (pendingLightOff && (currentTime - buttonPressTime >= autoLightOffDelay)) {
+        ledstrip.lichtUit();
+        lightIsOff = true;
+        pendingLightOff = false;
+        Serial.println("Licht UIT na 10 seconden.");
+      }
+    }
+    else if (strncmp(regel, "ledstrip: aan", 13) == 0) {
       if (lightIsOff) {
         ledstrip.lichtAan();
         lightIsOff = false;
         Serial.println("Server zegt: licht AAN.");
       }
+      // Reset eventuele uit-aftelling
+      buttonPressTime = 0;
+      pendingLightOff = false;
+    }else if (strncmp(regel, "ledstrip: uit", 13) == 0) {
+      if (!lightIsOff) {
+        ledstrip.lichtUit();
+        lightIsOff = true;
+        Serial.println("Server zegt: licht uit.");
+      }
     }
-    // pressedPreviously = pressed;
+
     regel = strtok(NULL, "\n");
   }
 
-
-
   ledstrip.update();
-  //delay(1000);
+  delay(250);  // Niet te vaak naar server
 }
-
-// Serial.print("Raw sensor value: ");
-// Serial.print(rawValue);
-// Serial.print(" → Pressed? ");
-// Serial.println(pressed ? "JA" : "NEE");
-
-//== = 1. Licht uit na 5 sec drukken == =
-// int pressed = memcmp("ledstrip: uit", recvBuffer, sizeof recvBuffer);
-//   if (pressed == 0) {
-//   if (buttonPressTime == 0) {
-//     buttonPressTime = currentTime;
-//     Serial.println("in de if statement");
-//   }
-
-//   if ((currentTime - buttonPressTime >= 5000) && !lightIsOff) {
-//     ledstrip.lichtUit();
-//     lightIsOff = true;
-//     lightOffTime = currentTime;
-//     Serial.println("Licht UIT na 5 seconden drukken.");
-//   }
-
-//   lastActivityTime = currentTime;
-// }
-// else {
-//   buttonPressTime = 0;
-// }
-
-// // === 2. Licht uit na 10 sec inactiviteit ===
-// if (pressed != 0 && !lightIsOff && (currentTime - lastActivityTime >= 10000)) {
-//   ledstrip.lichtUit();
-//   lightIsOff = true;
-//   lightOffTime = currentTime;
-//   Serial.println("Licht UIT na 10 seconden inactiviteit.");
-// }
-
-// // === 3. Altijd weer aan na 5 sec uit ===
-// if (lightIsOff && (currentTime - lightOffTime >= autoLightOnDelay)) {
-//   ledstrip.lichtAan();
-//   lightIsOff = false;
-//   lastActivityTime = currentTime;
-//   Serial.println("Licht AAN na 5 seconden uit geweest te zijn.");
-// }

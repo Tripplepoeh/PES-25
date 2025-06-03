@@ -1,32 +1,29 @@
 /*
- * bewegingsensor.h
+ * Bewegingssensor.h
  *
- *  Created on: Jun 2, 2025
- *      Author: aashi
+ *  Created on: May 12, 2025
+ *      Author: ocker
  */
 
-#ifndef INC_BEWEGINGSENSOR_H_
-#define INC_BEWEGINGSENSOR_H_
+#ifndef INC_BEWEGINGSSENSOR_H_
+#define INC_BEWEGINGSSENSOR_H_
 
 #include "main.h"
 
 class Bewegingssensor {
 public:
-	Bewegingssensor(GPIO_TypeDef* gpiopPort, uint16_t gpioPin);
+    Bewegingssensor();
 
-//	void controleerEnVerzend();
-	void CheckWaarde();
-	uint8_t GetWaarde() const;
+//    void controleerEnVerzend();
+    void CheckWaarde();
+    uint8_t GetWaarde() const;
 
 private:
-	GPIO_TypeDef* _gpioPort;
-	uint16_t _gpioPin;
-	//I2C_HandleTypeDef* _i2c;
-	uint8_t _waarde;
+
+    uint8_t _waarde;
 
 };
 
 
 
-
-#endif /* INC_BEWEGINGSENSOR_H_ */
+#endif /* INC_BEWEGINGSSENSOR_H_ */

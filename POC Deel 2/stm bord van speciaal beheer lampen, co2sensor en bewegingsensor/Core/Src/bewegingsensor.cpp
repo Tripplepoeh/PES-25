@@ -9,13 +9,12 @@
 #include "string.h"
 #include "main.h"
 
-Bewegingssensor::Bewegingssensor(GPIO_TypeDef* gpioPort, uint16_t gpioPin)
-    : _gpioPort(gpioPort), _gpioPin(gpioPin), _waarde(0) {}
+Bewegingssensor::Bewegingssensor() {}
 
 
 void Bewegingssensor::CheckWaarde() {
-    int status = HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_0);
-    _waarde = status;
+    _waarde = HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_1);
+
 }
 
 

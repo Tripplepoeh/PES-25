@@ -140,7 +140,7 @@ int main(void)
   geleLed geel;
   rodeLed rood;
 
-  Bewegingssensor bws(GPIOB, GPIO_PIN_0);
+  Bewegingssensor bws;
 
   std::vector<uint8_t> Ids = { BEWEGINGSENSOR, CO2SENSOR, ROODLAMP, GROENLAMP, GEELLAMP};
   i2c.I2CInit(Ids, &geel, &groen, &rood, &bws);
@@ -165,6 +165,7 @@ int main(void)
 	 		            char err_msg[] = "SGP30 leesfout\r\n";
 	 		            HAL_UART_Transmit(&huart2, (uint8_t*)err_msg, strlen(err_msg), HAL_MAX_DELAY);
 	 	            }
+
   }
   /* USER CODE END 3 */
 }
@@ -383,8 +384,8 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, LD3_Pin|roodLed_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin : PB0 */
-  GPIO_InitStruct.Pin = GPIO_PIN_0;
+  /*Configure GPIO pins : PB0 PB1 */
+  GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
