@@ -22,6 +22,8 @@ public:
     // Schakel de LED-strip uit (fade-out effect)
     void lichtUit();
 
+    void LichtDimmen();
+
     // Schakel de LED-strip aan (fade-in effect)
     void lichtAan();
 
