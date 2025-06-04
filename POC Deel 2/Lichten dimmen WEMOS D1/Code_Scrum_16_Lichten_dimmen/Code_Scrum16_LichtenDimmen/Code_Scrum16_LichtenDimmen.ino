@@ -13,6 +13,7 @@
 #define LED_TYPE WS2811
 // Kleurenvolgorde van de LEDs
 #define COLOR_ORDER GRB
+
 CRGB leds[NUM_LEDS];
 
 // Constructor voor de LEDstrip klasse
@@ -25,8 +26,7 @@ LEDstrip::LEDstrip(uint8_t pin, uint16_t numLeds)
 // Initialiseer de LEDstrip
 void LEDstrip::init() {
   pinMode(_pin, OUTPUT);
-  // Voeg LEDs toe aan de FastLED bibliotheek
-  // FastLED voegt ondersteuning toe voor dynamische pinnen
+  // Voeg LEDs toe aan de FastLED bibliotheek, voor dynamische pin ondersteuning
   FastLED.addLeds<WS2811, D0, GRB>(_leds, _numLeds).setCorrection(TypicalLEDStrip);
   // Stel de helderheid in
   FastLED.setBrightness(64);
@@ -34,10 +34,10 @@ void LEDstrip::init() {
 
 // Stel de kleur van de LEDstrip in op basis van een situatie
 void LEDstrip::setColor(int situation) {
-  // Voorkom het aanpassen als de huidige situatie overeenkomt
+  // Doe niets als de situatie niet veranderd is
   if (_currentState == situation) return;
 
-  // Schakel de LEDstrip aan als de vorige staat uitgeschakeld was
+  // Schakel de LEDstrip aan als die eerst uit stond en nu aan moet
   if (_currentState == -1 && situation == 1) {
     lichtAan();
     _currentState = situation;
@@ -45,9 +45,10 @@ void LEDstrip::setColor(int situation) {
   }
   _currentState = situation;
 
-  // Verander de kleur geleidelijk
+  // Verander de kleur geleidelijk in stappen
   for (int colorStep = 0; colorStep <= 255; colorStep++) {
     r = 255;
+    // Als situatie 1: kleur opbouwen, anders kleur afbouwen
     g = (situation == 1) ? colorStep : 255 - colorStep;
     b = (situation == 1) ? colorStep : 255 - colorStep;
 
@@ -57,22 +58,24 @@ void LEDstrip::setColor(int situation) {
     }
 
     FastLED.show();
-    delay(1000);
+    delay(1000); // Wacht 1 seconde tussen elke stap voor vloeiende overgang
   }
 }
 
-// Update de LEDstrip (laat de huidige kleur zien)
+// Update de LEDstrip (laat huidige kleuren zien)
 void LEDstrip::update() {
   FastLED.show();
 }
 
+// Zet de LEDstrip uit (dim tot lage waarde)
 void LEDstrip::lichtUit() {
   for (int i = 0; i < _numLeds; i++) {
-    _leds[i] = CRGB(40, 40, 40);
+    _leds[i] = CRGB(40, 40, 40); // Zwakke gloed (niet volledig uit)
   }
   FastLED.show();
 }
 
+// Dim de LEDstrip (zet alle LEDs op rood)
 void LEDstrip::LichtDimmen() {
   for (int i = 0; i < _numLeds; i++) {
     _leds[i] = CRGB::Red;
@@ -80,6 +83,7 @@ void LEDstrip::LichtDimmen() {
   FastLED.show();
 }
 
+// Zet de LEDstrip volledig aan (helder wit)
 void LEDstrip::lichtAan() {
   for (int i = 0; i < _numLeds; i++) {
     _leds[i] = CRGB::White;
