@@ -1,119 +1,88 @@
-#include <stdio.h>
-#include <string.h>
+#include "LEDstrip.h"
 #include <FastLED.h>
 
-#include "LEDstrip.h"
-#include "Druksensor.h"
-#include "WiFiManager.h"
+// Pin waar de LEDstrip is aangesloten
+#define LED_PIN D0
+// Analoge pin voor de druksensor
+#define Druk_Sensor A0
+// Aantal LEDs in de strip
+#define NUM_LEDS 8
+// Standaard helderheid van de LEDs
+#define BRIGHTNESS 64
+// Type LEDstrip
+#define LED_TYPE WS2811
+// Kleurenvolgorde van de LEDs
+#define COLOR_ORDER GRB
+CRGB leds[NUM_LEDS];
 
-// Netwerkgegevens voor WiFi-verbinding en server
-const char* WIFI_SSID = "NSELab";
-const char* WIFI_PASSWORD = "NSELabWiFi";
-const char* SERVER_IP = "145.52.127.184";
-const int SERVER_PORT = 12345;
-
-// Hardwaredefinities
-#define LED_PIN D0           // Pin waarop de LED-strip is aangesloten
-#define DRUK_SENSOR A0       // Analoge pin voor de druksensor
-#define NUM_LEDS 8           // Aantal LEDs op de strip
-
-// Initialisatie van objecten voor WiFi, LEDstrip en Druksensor
-WiFiManager wifiManager(WIFI_SSID, WIFI_PASSWORD, SERVER_IP, SERVER_PORT);
-LEDstrip ledstrip(LED_PIN, NUM_LEDS);
-Druksensor drukSensor(DRUK_SENSOR);
-
-// Variabelen voor tijdsregistratie
-unsigned long buttonPressTime = 0;
-unsigned long lastSendTime = 0;
-
-// Tijdinstellingen (in milliseconden)
-const unsigned long sendInterval = 1000;           // Interval om data te versturen
-const unsigned long autoLightOffDelay = 5000;      // Tijd voordat licht automatisch uitgaat (5 seconden)
-
-// Statusvariabelen voor verlichting
-bool lightIsOff = false;
-bool pendingLightOff = false;
-
-void setup() {
-  Serial.begin(115200);        // Start seriële communicatie voor debugging
-  ledstrip.init();             // Initialiseer de LED-strip
-  wifiManager.wifiInit();      // Maak WiFi-verbinding
-  ledstrip.lichtAan();         // Zet het licht aan bij opstarten
-  lightIsOff = false;
-  buttonPressTime = 0;
-  pendingLightOff = false;
+// Constructor voor de LEDstrip klasse
+LEDstrip::LEDstrip(uint8_t pin, uint16_t numLeds)
+  : _pin(pin), _numLeds(numLeds), _currentState(0) {
+  // Reserveer geheugen voor de LED array
+  _leds = new CRGB[_numLeds];
 }
 
-void loop() {
-  int rawValue = drukSensor.getValue();           // Lees waarde van de druksensor
-  unsigned long currentTime = millis();           // Huidige tijd (milliseconden sinds start)
+// Initialiseer de LEDstrip
+void LEDstrip::init() {
+  pinMode(_pin, OUTPUT);
+  // Voeg LEDs toe aan de FastLED bibliotheek
+  // FastLED voegt ondersteuning toe voor dynamische pinnen
+  FastLED.addLeds<WS2811, D0, GRB>(_leds, _numLeds).setCorrection(TypicalLEDStrip);
+  // Stel de helderheid in
+  FastLED.setBrightness(64);
+}
 
-  // === Data naar server sturen ===
-  wifiManager.connectToServer();                  // Maak verbinding met de server
-  char* recvBuffer = wifiManager.receiveData();   // Ontvang eventuele eerste data van server
-  char buffer[128];
-  snprintf(buffer, sizeof(buffer), "set druksensor %d get ledstrip", rawValue); // Maak bericht aan server
-  Serial.println(buffer);
-  wifiManager.sendData(buffer);                   // Verstuur data naar server
-  recvBuffer = wifiManager.receiveData();         // Ontvang reactie van server
-  wifiManager.disconnectFromServer();             // Verbreek serververbinding
-  Serial.println(recvBuffer);
+// Stel de kleur van de LEDstrip in op basis van een situatie
+void LEDstrip::setColor(int situation) {
+  // Voorkom het aanpassen als de huidige situatie overeenkomt
+  if (_currentState == situation) return;
 
-  // === Serverrespons verwerken ===
-  char* regel = strtok(recvBuffer, "\n");         // Splits serverrespons per regel
-  while (regel != NULL) {
-    Serial.print("Verwerkte regel: ");
-    Serial.println(regel);
-
-    // Server vraagt om "speciaal" licht: start timer en schakel na verloop uit
-    if (strncmp(regel, "ledstrip: speciaal", 18) == 0) {
-      if (!lightIsOff && !pendingLightOff) {
-        buttonPressTime = currentTime;
-        pendingLightOff = true;
-        Serial.println("Server vraagt om licht speciaal. Start 10s timer...");
-      }
-
-      if (pendingLightOff && (currentTime - buttonPressTime >= autoLightOffDelay)) {
-        ledstrip.lichtUit();
-        lightIsOff = true;
-        pendingLightOff = false;
-        Serial.println("Licht UIT na 10 seconden.");
-      }
-    }
-    // Server zegt dat het licht aan moet
-    else if (strncmp(regel, "ledstrip: aan", 13) == 0) {
-      if (lightIsOff) {
-        ledstrip.lichtAan();
-        lightIsOff = false;
-        Serial.println("Server zegt: licht AAN.");
-      }
-      // Reset eventuele uit-timer
-      buttonPressTime = 0;
-      pendingLightOff = false;
-    }
-    // Server zegt dat het licht uit moet
-    else if (strncmp(regel, "ledstrip: uit", 13) == 0) {
-      if (!lightIsOff && !pendingLightOff) {
-        buttonPressTime = currentTime;
-        pendingLightOff = true;
-        Serial.println("Server vraagt om licht speciaal. Start 10s timer...");
-      }
-      if (!lightIsOff) {
-        ledstrip.LichtDimmen();
-        lightIsOff = true;
-        Serial.println("Server zegt: licht uit.");
-      }
-      else if (pendingLightOff && (currentTime - buttonPressTime >= autoLightOffDelay)) {
-        ledstrip.lichtUit();
-        lightIsOff = true;
-        pendingLightOff = false;
-        Serial.println("Licht UIT na 10 seconden.");
-      }
-    }
-
-    regel = strtok(NULL, "\n");   // Volgende regel verwerken
+  // Schakel de LEDstrip aan als de vorige staat uitgeschakeld was
+  if (_currentState == -1 && situation == 1) {
+    lichtAan();
+    _currentState = situation;
+    return;
   }
+  _currentState = situation;
 
-  ledstrip.update();              // Update de LED-strip status
-  delay(100);                     // Wacht kort om server niet te vaak te benaderen
+  // Verander de kleur geleidelijk
+  for (int colorStep = 0; colorStep <= 255; colorStep++) {
+    r = 255;
+    g = (situation == 1) ? colorStep : 255 - colorStep;
+    b = (situation == 1) ? colorStep : 255 - colorStep;
+
+    // Pas de kleur toe op alle LEDs
+    for (int i = 0; i < _numLeds; i++) {
+      _leds[i] = CRGB(r, g, b);
+    }
+
+    FastLED.show();
+    delay(1000);
+  }
+}
+
+// Update de LEDstrip (laat de huidige kleur zien)
+void LEDstrip::update() {
+  FastLED.show();
+}
+
+void LEDstrip::lichtUit() {
+  for (int i = 0; i < _numLeds; i++) {
+    _leds[i] = CRGB(40, 40, 40);
+  }
+  FastLED.show();
+}
+
+void LEDstrip::LichtDimmen() {
+  for (int i = 0; i < _numLeds; i++) {
+    _leds[i] = CRGB::Red;
+  }
+  FastLED.show();
+}
+
+void LEDstrip::lichtAan() {
+  for (int i = 0; i < _numLeds; i++) {
+    _leds[i] = CRGB::White;
+  }
+  FastLED.show();
 }
