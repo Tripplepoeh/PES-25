@@ -45,8 +45,7 @@ void setup() {
 }
 
 void loop() {
-  // int rawValue = drukSensor.getValue();           // Lees waarde van de druksensor
-  int rawValue = 512;
+  int rawValue = drukSensor.getValue();           // Lees waarde van de druksensor
   Serial.print("Test druksensorwaarde: ");
   Serial.println(rawValue);
   unsigned long currentTime = millis();           // Huidige tijd (milliseconden sinds start)
