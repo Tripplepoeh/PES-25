@@ -1,0 +1,1 @@
+In de main staat alleen eigen code, alle door IDE gegenereerde code is wegegelaten om overzicht te houden.
