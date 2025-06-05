@@ -46,7 +46,7 @@ void setup() {
 
 void loop() {
   int rawValue = drukSensor.getValue();           // Lees waarde van de druksensor
-  Serial.print("Test druksensorwaarde: ");
+  Serial.print("druksensorwaarde: ");
   Serial.println(rawValue);
   unsigned long currentTime = millis();           // Huidige tijd (milliseconden sinds start)
 
@@ -57,7 +57,7 @@ void loop() {
   snprintf(buffer, sizeof(buffer), "set druksensor %d get ledstrip", rawValue); // Maak bericht aan server
   Serial.println(buffer);
   wifiManager.sendData(buffer);                   // Verstuur data naar server
-  recvBuffer = "ledstrip: speciaal";      // Ontvang reactie van server
+  recvBuffer = wifiManager.receiveData();      // Ontvang reactie van server
   wifiManager.disconnectFromServer();             // Verbreek serververbinding
   Serial.println(recvBuffer);
 
