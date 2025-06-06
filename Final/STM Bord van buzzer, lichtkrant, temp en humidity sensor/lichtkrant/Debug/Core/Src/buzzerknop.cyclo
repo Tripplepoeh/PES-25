@@ -1,0 +1,6 @@
+../Core/Src/buzzerknop.cpp:4:1:Buzzerknop::Buzzerknop()	1
+../Core/Src/buzzerknop.cpp:6:1:Buzzerknop::~Buzzerknop()	1
+../Core/Src/buzzerknop.cpp:8:6:void Buzzerknop::poll()	3
+../Core/Src/buzzerknop.cpp:23:6:void Buzzerknop::gedrukt()	2
+../Core/Src/buzzerknop.cpp:34:6:void Buzzerknop::onGedrukt()	1
+../Core/Src/buzzerknop.cpp:39:6:bool Buzzerknop::isIngedrukt()	1
