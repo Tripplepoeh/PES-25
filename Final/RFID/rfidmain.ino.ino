@@ -53,7 +53,7 @@ stuur daarna door naar de server. als er niks wordt gevonden stuur 0. */
     
     delay(100);
   }
-  if (millis() - lastScanTime > 10000) { //! als er 10 seconden niks wordt gezien, reinitialize de rfidsensor om lock-up te voorkomen.
+  if (millis() - laatstescan > 10000) { //! als er 10 seconden niks wordt gezien, reinitialize de rfidsensor om lock-up te voorkomen.
         Serial.println("Reinitializing RFID");
       
       rfid.init(); 
