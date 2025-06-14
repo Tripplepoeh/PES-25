@@ -1,22 +1,20 @@
 #include "wemosServer.h" 
 #include "wemosStatuscontrole.h"
-//#include "getfromdatabase.h"
 
 
 using namespace std;
 
 int main() {
-  //  getFromDatabase get("localhost", "rasp_b", "rasp_b", "sensordata");
     wemosStatuscontrole status;
-    WemosSocket server(&status);
+    WemosSocket server(&status); //stuur statuscontrole object door naar wemossocket object
 
     server.socketInit("145.52.127.184", 12345); // IP en poort van de device zelf //145.52.127.184
 
     cout << "Server is gestart!" << endl;
 
-    bool running = true;
+    bool running = true; 
 
-    while (running) {
+    while (running) { //oneindige loop
         server.acceptClient();
         server.handleClient();
         
