@@ -15,6 +15,16 @@ De verbindingswijze tussen de componenten gaan als volgt:\
 -STM32: via I2C naar Pi_B\
 -Raspberry Pi: tussen de Pi's is er via een socket communicatie
 
+Opstarten netwerk:\
+-Verzorg dat alle verbindingen van componenten kloppen en dat alle instellingen als IP-adres en poortnummer goed zijn ingesteld\
+-Start beide processen op van Pi_A en dan van Pi_B\
+-Hierna kunnen alle micorcontrollers worden gestart, waarbij het netwerk gelijk goed zal werken
+
+In het geval dat het niet in een keer goed werkt kan er op de volgende wijze gedebugged worden:\
+-Check eerst of WiFi verbinding stabiel is en of alle IP-addressen en poortnummers goed zijn ingevuld bij de Pi's en de Wemossen\
+-Check daarna of alle pins goed zijn verbonden\
+
+
 In het ontwerp hieronder is al een overzicht te zien welke componenten aan welke microcontrollers zijn verbonden. Daaronder zijn nog de klassendiagrammen te vinden voor het eindproduct.
 
 ## Ontwerp
