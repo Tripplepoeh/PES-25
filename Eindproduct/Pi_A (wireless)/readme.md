@@ -4,13 +4,13 @@
 Deze Pi heeft 2 mappen, namelijk een voor de socket verbinding met de andere pi en een server waar de Wemossen aan kunnen verbinden. Beide mappen runnen uiteindelijk hun eigen proces en communniceren met elkaar via FIFO pipes. Voor de werking van het netwerk moeten eerst deze processen gestart worden voordat de processen van de andere Pi gestart worden.
 ### Toelicht map 'Socket code'
 In de Socket code map zit de code in waarmee de Pi een socket connectie openmaakt waarmee de andere Pi kan verbinden.\
-Belangrijk om aan te passen voor de echte toepassing:\
+#### Belangrijk om aan te passen voor de echte toepassing:\
 -Verzorg dat het IP-adres van de Pi wordt ingevuld in de main\
 -Verzorg dat het juiste poortnummer wordt ingevuld in de main
 
 Overige code van de klassen hoeven niet aangepast te worden en kunnen zo gebruikt worden.
 
-De compilatie en starten via een terminal:\
+#### De compilatie en starten via een terminal:\
 -g++ -o [outputnaam] PiSocket.cpp PiSocketMain.cpp socket.cpp\
 -./[outputnaam]
 
@@ -26,13 +26,13 @@ De volgende commando's zijn geldig:
 - `set druksensor 19 get ledstrip` 
   (Alles achter elkaar in één regel mag ook. De juiste respons wordt dan ook correct teruggestuurd.)
 
-Belangrijk om aan te passen voor de echte toepassing:\
+#### Belangrijk om aan te passen voor de echte toepassing:\
 -Verzorg dat het IP-adres van de Pi wordt ingevuld in de main, waar de Wemossen aan gaan verbinden\
 -Verzorg dat het juiste poortnummer wordt ingevuld in de main, waar de Wemossen aan gaan verbinden\
 -Als er een nieuwe sensor of actuator wordt toegevoegd moet dat in de statuscontrole.cpp in de constructor worden toegevoegd. Dit moet dan ook bij de andere Pi aangepast worden./
 
 Overige code van de klassen hoeven niet aangepast te worden en kunnen zo gebruikt worden.
 
-De compilatie en starten via een terminal:\
+#### De compilatie en starten via een terminal:\
 -g++ -o [outputnaam] wemosServer.cpp wemosServerMain.cpp socket.cpp wemosStatuscontrole.cpp\
 -./[outputnaam]
