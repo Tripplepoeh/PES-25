@@ -1,0 +1,2 @@
+../Core/Src/noodknop.cpp:9:2:noodknop::noodknop()	1
+../Core/Src/noodknop.cpp:12:11:uint32_t noodknop::getWaarde()	1

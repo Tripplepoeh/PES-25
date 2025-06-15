@@ -1,0 +1,8 @@
+../Core/Inc/lamp.h:14:10:lamp::~lamp()	1
+../Core/Inc/lamp.h:14:10:virtual lamp::~lamp()	1
+../Core/Inc/lamp.h:12:7:constexpr lamp::lamp()	1
+../Core/Src/rodeLed.cpp:9:1:rodeLed::rodeLed()	1
+../Core/Src/rodeLed.cpp:12:6:virtual void rodeLed::zetAan()	1
+../Core/Src/rodeLed.cpp:15:6:virtual void rodeLed::zetUit()	1
+../Core/Inc/rodeLed.h:14:7:rodeLed::~rodeLed()	1
+../Core/Inc/rodeLed.h:14:7:virtual rodeLed::~rodeLed()	1

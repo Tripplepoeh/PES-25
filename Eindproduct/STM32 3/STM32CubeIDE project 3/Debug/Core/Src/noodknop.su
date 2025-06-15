@@ -1,0 +1,2 @@
+../Core/Src/noodknop.cpp:9:2:noodknop::noodknop()	16	static
+../Core/Src/noodknop.cpp:12:11:uint32_t noodknop::getWaarde()	16	static

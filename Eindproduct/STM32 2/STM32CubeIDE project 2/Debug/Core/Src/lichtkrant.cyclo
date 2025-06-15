@@ -1,0 +1,6 @@
+../Core/Src/lichtkrant.cpp:63:12:int charIndex(char)	13
+../Core/Src/lichtkrant.cpp:77:6:void buildScrollBufferFromString(const char*, uint8_t*, int*)	3
+../Core/Src/lichtkrant.cpp:95:6:void Lichtkrant_SendAll(uint8_t, uint8_t)	2
+../Core/Src/lichtkrant.cpp:107:6:void Lichtkrant_Initcascade()	2
+../Core/Src/lichtkrant.cpp:118:6:void Lichtkrant_UpdateFrame()	5
+../Core/Src/lichtkrant.cpp:138:6:void scrollBuffer32(uint8_t*, int, uint16_t)	5

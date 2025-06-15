@@ -1,0 +1,3 @@
+../Core/Src/lamp.cpp:9:1:lamp::lamp()	16	static
+../Core/Src/lamp.cpp:12:6:void lamp::zetAan()	16	static
+../Core/Src/lamp.cpp:15:6:void lamp::zetUit()	16	static

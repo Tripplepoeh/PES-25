@@ -1,0 +1,5 @@
+../Core/Src/RFIDSensor.cpp:75:1:RFIDSensor::RFIDSensor()	16	static
+../Core/Src/RFIDSensor.cpp:80:1:RFIDSensor::~RFIDSensor()	16	static
+../Core/Src/RFIDSensor.cpp:84:6:void RFIDSensor::init()	16	static
+../Core/Src/RFIDSensor.cpp:89:6:void RFIDSensor::poll()	16	static
+../Core/Src/RFIDSensor.cpp:106:16:const uint8_t* RFIDSensor::getUID() const	40	static

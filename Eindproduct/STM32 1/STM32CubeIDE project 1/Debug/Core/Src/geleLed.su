@@ -1,0 +1,8 @@
+../Core/Inc/lamp.h:14:10:lamp::~lamp()	16	static
+../Core/Inc/lamp.h:14:10:virtual lamp::~lamp()	16	static
+../Core/Inc/lamp.h:12:7:constexpr lamp::lamp()	16	static
+../Core/Src/geleLed.cpp:9:1:geleLed::geleLed()	16	static
+../Core/Src/geleLed.cpp:12:6:virtual void geleLed::zetAan()	16	static
+../Core/Src/geleLed.cpp:15:6:virtual void geleLed::zetUit()	16	static
+../Core/Inc/geleLed.h:12:7:geleLed::~geleLed()	16	static
+../Core/Inc/geleLed.h:12:7:virtual geleLed::~geleLed()	16	static

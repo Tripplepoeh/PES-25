@@ -1,0 +1,3 @@
+../Core/Src/bewegingsensor.cpp:12:1:Bewegingssensor::Bewegingssensor()	16	static
+../Core/Src/bewegingsensor.cpp:15:6:void Bewegingssensor::CheckWaarde()	16	static
+../Core/Src/bewegingsensor.cpp:21:9:uint8_t Bewegingssensor::GetWaarde() const	16	static

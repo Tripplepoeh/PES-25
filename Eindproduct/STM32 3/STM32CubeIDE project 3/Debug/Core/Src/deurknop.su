@@ -1,0 +1,4 @@
+../Core/Src/deurknop.cpp:5:1:deurknop::deurknop()	16	static
+../Core/Src/deurknop.cpp:10:1:deurknop::~deurknop()	16	static
+../Core/Src/deurknop.cpp:13:6:void deurknop::poll()	24	static
+../Core/Src/deurknop.cpp:33:9:uint8_t deurknop::isOpen() const	16	static
