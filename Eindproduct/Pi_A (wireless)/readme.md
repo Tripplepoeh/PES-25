@@ -1,38 +1,58 @@
 # Pi_A
 
 ## Toelichting mappen
-Deze Pi heeft 2 mappen, namelijk een voor de socket verbinding met de andere pi en een server waar de Wemossen aan kunnen verbinden. Beide mappen runnen uiteindelijk hun eigen proces en communniceren met elkaar via FIFO pipes. Voor de werking van het netwerk moeten eerst deze processen gestart worden voordat de processen van de andere Pi gestart worden.
-### Toelicht map 'Socket code'
-In de Socket code map zit de code in waarmee de Pi een socket connectie openmaakt waarmee de andere Pi kan verbinden.\
-#### Belangrijk om aan te passen voor de echte toepassing:\
--Verzorg dat het IP-adres van de Pi wordt ingevuld in de main\
--Verzorg dat het juiste poortnummer wordt ingevuld in de main
 
-Overige code van de klassen hoeven niet aangepast te worden en kunnen zo gebruikt worden.
+Deze Pi heeft twee belangrijke mappen:
+- **Socket code**: Voor de socketverbinding met de andere Pi
+- **Wemos server code**: Voor de server waarmee Wemossen kunnen verbinden
 
-#### De compilatie en starten via een terminal:\
--g++ -o [outputnaam] PiSocket.cpp PiSocketMain.cpp socket.cpp\
--./[outputnaam]
+Beide mappen draaien elk hun eigen proces en communiceren onderling via FIFO pipes.  
+Voor het goed functioneren van het netwerk moeten eerst de processen van deze Pi gestart worden, daarna pas de processen van de andere Pi.
 
-### Toelicht map 'Wemos server code'
-In de Wemos server code map zit de code in waarmee de Wemossen verbinding kunnen maken met de Pi. In deze code kunnen maximaal 5 clients tegelijk verbonden zijn met de server. De statuscontrol klasse parsed alle data en verewrkt het naar uiteindelijk een mogelijke respons. De statuscontrol houdt ook alle actuatorstates bij en stuurt alleen de sensorupdates door naar de andere proces van de socket en die stuurt het door naar de andere Pi. De andere Pi houdt zelf ook de actuatorstates bij, er worden dus alleen sensorwaardes gestuurd van Pi naar Pi. Het systeem is plug en play dus er kan gemakkelijk een nieuwe Wemos worden aageschafd en geprogrammeerd en die heeft dan de mogelijkheid om met de server contact te nemen. 
+---
 
-#### Geldige inputs
+### 1. Map: `Socket code`
 
-De volgende commando's zijn geldig:
+In deze map vind je de code waarmee de Pi een socketverbinding opent, zodat de andere Pi kan verbinden.
 
-- `set druksensor 19` //set van een sensorwaarde
-- `get ledstrip` //get van een actuator
-- `set druksensor 19 get ledstrip` 
-  (Alles achter elkaar in één regel mag ook. De juiste respons wordt dan ook correct teruggestuurd.)
+**Belangrijk om aan te passen voor de echte toepassing:**
+- Vul het **IP-adres van deze Pi** in, in de `main`.
+- Vul het **juiste poortnummer** in, in de `main`.
 
-#### Belangrijk om aan te passen voor de echte toepassing:
--Verzorg dat het IP-adres van de Pi wordt ingevuld in de main, waar de Wemossen aan gaan verbinden\
--Verzorg dat het juiste poortnummer wordt ingevuld in de main, waar de Wemossen aan gaan verbinden\
--Als er een nieuwe sensor of actuator wordt toegevoegd moet dat in de statuscontrole.cpp in de constructor worden toegevoegd. Dit moet dan ook bij de andere Pi aangepast worden./
+De rest van de code hoeft niet aangepast te worden en kan direct gebruikt worden.
 
-Overige code van de klassen hoeven niet aangepast te worden en kunnen zo gebruikt worden.
+**Compileren en starten via een terminal:**
+```bash
+g++ -o [outputnaam] PiSocket.cpp PiSocketMain.cpp socket.cpp
+./[outputnaam]
+```
 
-#### De compilatie en starten via een terminal:\
--g++ -o [outputnaam] wemosServer.cpp wemosServerMain.cpp socket.cpp wemosStatuscontrole.cpp\
--./[outputnaam]
+---
+
+### 2. Map: `Wemos server code`
+
+Deze map bevat de servercode waarmee maximaal 5 Wemossen tegelijk kunnen verbinden met de Pi.  
+De `statuscontrol` klasse verwerkt alle ontvangen data en bepaalt de juiste respons.  
+Daarnaast houdt `statuscontrol` alle actuatorstatussen bij en stuurt enkel sensorupdates door naar het andere socket-proces, dat deze weer doorstuurt naar de andere Pi.  
+Ook de andere Pi houdt zijn eigen actuatorstatussen bij; er worden dus alleen sensorwaardes tussen de Pi’s uitgewisseld.  
+Het systeem is plug & play: een nieuwe Wemos kan eenvoudig toegevoegd worden en verbinding maken met de server.
+
+**Geldige inputs voor de Wemos-client:**
+- `set druksensor 19` &nbsp;_(zet een sensorwaarde)_
+- `get ledstrip` &nbsp;_(opvragen van een actuatorstatus)_
+- `set druksensor 19 get ledstrip` &nbsp;_(combineren op één regel is toegestaan)_
+
+Alles op één regel is toegestaan; de juiste respons wordt teruggestuurd.
+
+**Belangrijk om aan te passen voor de echte toepassing:**
+- Vul het **IP-adres van de Pi** in de `main` in (waar de Wemossen op verbinden).
+- Vul het **juiste poortnummer** in de `main` in.
+- Voeg bij nieuwe sensoren/actuatoren deze toe aan de constructor van `statuscontrole.cpp` (dit moet ook bij de andere Pi aangepast worden).
+
+De rest van de code hoeft niet aangepast te worden en kan direct gebruikt worden.
+
+**Compileren en starten via een terminal:**
+```bash
+g++ -o [outputnaam] wemosServer.cpp wemosServerMain.cpp socket.cpp wemosStatuscontrole.cpp
+./[outputnaam]
+```
