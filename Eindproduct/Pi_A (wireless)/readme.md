@@ -26,7 +26,7 @@ De volgende commando's zijn geldig:
 - `set druksensor 19 get ledstrip` 
   (Alles achter elkaar in één regel mag ook. De juiste respons wordt dan ook correct teruggestuurd.)
 
-#### Belangrijk om aan te passen voor de echte toepassing:\
+#### Belangrijk om aan te passen voor de echte toepassing:
 -Verzorg dat het IP-adres van de Pi wordt ingevuld in de main, waar de Wemossen aan gaan verbinden\
 -Verzorg dat het juiste poortnummer wordt ingevuld in de main, waar de Wemossen aan gaan verbinden\
 -Als er een nieuwe sensor of actuator wordt toegevoegd moet dat in de statuscontrole.cpp in de constructor worden toegevoegd. Dit moet dan ook bij de andere Pi aangepast worden./
