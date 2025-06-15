@@ -5,27 +5,34 @@ In deze folder staat het eindproduct van het Embedded Systems project voor de we
 In dit eindproduct folder staan mapjes van alle componenten met hun code in C of C++. Alle code is voorzien van de juiste commentaar als toelichting.
 
 
-In elk mapje geeft een toelichting hoe de microcontroller werkt met de componenten. Hierbij staan dus de pin verbindingen en werkwijze van de componenten toegelicht. De microcontrollers zijn als volgt geprogrammeerd:\
--Wemos: via Arduino IDE\
--STM32: via STM32CubeIDE\
--Raspberry Pi: Geany
+In elk mapje geeft een toelichting hoe de microcontroller werkt met de componenten. Hierbij staan dus de pin verbindingen en werkwijze van de componenten toegelicht. De microcontrollers zijn als volgt geprogrammeerd:
+- Wemos: via Arduino IDE
+- STM32: via STM32CubeIDE
+- Raspberry Pi: Geany
 
-De verbindingswijze tussen de componenten gaan als volgt:\
--Wemos: via WiFI naar Pi_A zijn serverapplicatie\
--STM32: via I2C naar Pi_B\
--Raspberry Pi: tussen de Pi's is er via een socket communicatie
+De verbindingswijze tussen de componenten gaan als volgt:
+- Wemos: via WiFI naar Pi_A zijn serverapplicatie
+- STM32: via I2C naar Pi_B
+- Raspberry Pi: tussen de Pi's is er via een socket communicatie
 
-Opstarten netwerk:\
--Verzorg dat alle verbindingen van componenten kloppen en dat alle instellingen als IP-adres en poortnummer goed zijn ingesteld\
--Start beide processen op van Pi_A en dan van Pi_B\
--Hierna kunnen alle micorcontrollers worden gestart, waarbij het netwerk gelijk goed zal werken
+Opstarten netwerk:
+- Verzorg dat alle verbindingen van componenten kloppen en dat alle instellingen als IP-adres en poortnummer goed zijn ingesteld
+- Start beide processen op van Pi_A en dan van Pi_B
+- Hierna kunnen alle micorcontrollers worden gestart, waarbij het netwerk gelijk goed zal werken
 
-In het geval dat het niet in een keer goed werkt kan er op de volgende wijze gedebugged worden:\
--Check eerst of WiFi verbinding stabiel is en of alle IP-addressen en poortnummers goed zijn ingevuld bij de Pi's en de Wemossen\
--Check daarna of alle pins goed zijn verbonden\
+In het geval dat het niet in een keer goed werkt kan er op de volgende wijze gedebugged worden:
+- Check eerst of WiFi verbinding stabiel is en of alle IP-addressen en poortnummers goed zijn ingevuld bij de Pi's en de Wemossen\
+- Check daarna of alle pins goed zijn verbonden\
+
+### Korte samenvatting verbindingswijze
+Eerder is kort benoemd op welke wijze de communicatie gebeurt. Hier is er een iets duidelijk toelichting tussen de communicatie van de Pi's naar de microcontrollers:
+#### I2C
+De I2C verbinding gebeurt door de master die de communicatie start. Bij de slave zit er speciaal klasse I2CBeheer die alle berichten verwerkt en een respons bericht klaar zet om naar de master te sturen. Hierbij stuurt dus de slave alleen als de master dat vraagt. 
+#### Wemosserver
+Bij de Wemossen wordt juist de verbinding gemaakt door de microcontrollers en maken zij verbinding met de Pi. Hierbij stuurt de Wemos zelf een bericht over zijn sensorwaardes en welke actuatorstatussen hij nodig heeft. \
 
 
-In het ontwerp hieronder is al een overzicht te zien welke componenten aan welke microcontrollers zijn verbonden. Daaronder zijn nog de klassendiagrammen te vinden voor het eindproduct.
+**In het ontwerp hieronder is al een overzicht te zien welke componenten aan welke microcontrollers zijn verbonden. Daaronder zijn nog de klassendiagrammen te vinden voor het eindproduct.**
 
 ## Ontwerp
 ontwerp \
