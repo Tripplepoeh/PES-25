@@ -1,6 +1,6 @@
 #include "WiFiManager.h"  // Include de WiFiManager voor WiFi-configuratie en servercommunicatie
 #include "EmergencyButton.h"  // Include de EmergencyButton voor de noodknopfunctionaliteit
-#include "grondvochtigheidSensor.h" // Include de grondvochtigheidSensor
+#include "grondvochtigheidSensor.h"
 
 // WiFi- en serverconfiguratie
 const char* WIFI_SSID = "NSELab";  // SSID van het WiFi-netwerk "NSELab"
@@ -53,7 +53,7 @@ void loop() {
         // tone(5, 1000,500);
         // delay(500);
         // noTone(5);
-        delay(500);
+        //delay(500);
     }
     // Controleer of de knop ingedrukt is (drukflank van HIGH naar LOW)
     if (lastButtonState == HIGH && currentState == LOW) {

@@ -27,7 +27,7 @@ public:
         std::cout << "[NOODKNOP] Gereset\n";
     }
 
-    // Verhindert kopieren van de singleton
+    // Singeleton implementatie
     EmergencyButton(const EmergencyButton&) = delete;
     EmergencyButton& operator=(const EmergencyButton&) = delete;
 
