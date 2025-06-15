@@ -1,6 +1,6 @@
-# Wemos
+# Wemos 1
 ## Componenten
-Dit STM32 bordje bestuurt de volgende componenten:\
+Dit Wemos bordje bestuurt de volgende componenten:\
 - Ledstrip
 - Druksensor
 
