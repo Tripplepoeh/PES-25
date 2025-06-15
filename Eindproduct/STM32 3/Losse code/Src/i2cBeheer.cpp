@@ -2,8 +2,6 @@
 #include "i2cBeheer.hpp"
 #include <iostream>
 #include <cstring>
-#include "lamp.h"
-#include "deurServo.h"
 #include "deurknop.h"
 #include "alleDefines.h"
 #include "deurServoTest.h"
@@ -14,7 +12,7 @@ I2CBeheer::I2CBeheer()
 /*Init functie die een vector verwacht met welke sensoren en actuatoren het bordje heeft
  * Er moeten ook adressen an de objecten gestuurd worden zodat deze bestuurd kunnen worden door I2CBeheer
  */
-void I2CBeheer::I2CInit(std::vector<uint8_t> Ids, deurknop *kn, lamp* gl, deurServotest *ser) {
+void I2CBeheer::I2CInit(std::vector<uint8_t> Ids, deurknop *kn, deurServotest *ser) {
     sensorIds = Ids;
     txLength = 0;
     //initialiseer actuatorIds
@@ -22,7 +20,6 @@ void I2CBeheer::I2CInit(std::vector<uint8_t> Ids, deurknop *kn, lamp* gl, deurSe
                    SPECIALBEHEERDISPLAY, ROODLAMP, GROENLAMP, GEELLAMP};
     //koppel binnenkomedende adressen met in de header gedefinieerde objecten
     knop = kn;
-    geelLamp = gl;
     servo = ser;
 }
 
@@ -49,12 +46,6 @@ void I2CBeheer::voerUit(uint8_t* data, uint16_t size) {
             case DEUR:
                 if (servo) {
                     if(waarde) servo->zetAan() ; //Aan als waarde 1 if anders uit
-                }
-                break;
-
-            case GROENLAMP:
-                if (geelLamp) {
-                    waarde ? geelLamp->zetAan() : geelLamp->zetUit();//Aan als waarde 1 if anders uit
                 }
                 break;
 
