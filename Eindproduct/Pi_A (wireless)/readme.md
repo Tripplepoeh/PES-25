@@ -11,7 +11,7 @@ Voor het goed functioneren van het netwerk moeten eerst de processen van deze Pi
 
 ---
 
-### 1. Map: `Socket code`
+### Map: `Socket code`
 
 In deze map vind je de code waarmee de Pi een socketverbinding opent, zodat de andere Pi kan verbinden.
 
@@ -29,7 +29,7 @@ g++ -o [outputnaam] PiSocket.cpp PiSocketMain.cpp socket.cpp
 
 ---
 
-### 2. Map: `Wemos server code`
+### Map: `Wemos server code`
 
 Deze map bevat de servercode waarmee maximaal 5 Wemossen tegelijk kunnen verbinden met de Pi.  
 De `statuscontrol` klasse verwerkt alle ontvangen data en bepaalt de juiste respons.  
