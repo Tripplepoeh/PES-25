@@ -16,7 +16,7 @@ extern UART_HandleTypeDef huart2;
 extern I2C_HandleTypeDef hi2c1;
 extern I2CBeheer i2c;
 //Grootte van binnenkomende en uitgaande berichten
-#define RX_BUF_SIZE 32
+#define RX_BUF_SIZE 64
 #define TX_BUF_SIZE 32
 
 int error=0;

@@ -11,6 +11,8 @@
 
 #include "main.h"
 extern I2C_HandleTypeDef hi2c3;
+extern UART_HandleTypeDef huart2;
+
 
 
 I2CBeheer::I2CBeheer()
@@ -50,15 +52,52 @@ void I2CBeheer::voerUit(uint8_t* data, uint16_t size) {
 
         switch (id) {
             // Voeg hier andere actuator cases toe en of vervang de andere cases
-        case BUZZER:
+        case BUZZER: {
                         if (buzzer) {
                             waarde ? buzzer->noodknopAan() : buzzer->noodknopUit(); //Aan als waarde 1 if anders uit
                         }
                         break;
-        default:
+        }
+
+        case LICHTKRANT: {
+            const uint8_t* start = &data[i + 1];
+            size_t maxLen = size - (i + 1);
+            size_t lengte = 0;
+
+            // Zoek naar 0x00 terminator in de resterende data
+            while (lengte < maxLen && start[lengte] != 0x00) {
+                lengte++;
+            }
+
+            // Als 0x00 gevonden is binnen bounds
+            if (lengte < maxLen && lengte < 63) {
+                char ontvangenMenu[64] = {0};
+                memcpy(ontvangenMenu, start, lengte);
+                ontvangenMenu[lengte] = '\0';  // null-terminate de string
+
+                setMenuDag(ontvangenMenu);  // dit moet gedeclareerd zijn (zie verderop)
+                //HAL_UART_Transmit(&huart2, (uint8_t*)ontvangenMenu, lengte, HAL_MAX_DELAY);
+
+                // Verhoog i zodat de loop correct verder gaat
+                i += 1 + lengte;  // +1 voor het beginpunt, +lengte voor string
+            }
+            break;
+        }
+        case SPECIALBEHEERDISPLAY: {
+            if (i + 2 < size) {
+                uint16_t Co2waarde = data[i + 1] | (uint16_t(data[i + 2]) << 8);
+                setCO2Waarde(Co2waarde);
+                i += 1; // omdat je één extra byte leest!
+            }
+            break;
+        }
+
+
+        default: {
                 std::cerr << "Onbekende actuator ID: 0x"
                           << std::hex << int(id) << "\n";
                 break;
+        }
         }
     }
 }
@@ -94,8 +133,9 @@ void I2CBeheer::setBerichtKlaar() {
                 	break;
                 }
 
-                default:
+                default:{
                     break;
+                }
             }
             //Zet de sensorwaardes in het bericht
             if (txLength + bytesToWrite > sizeof(txBericht)) break;

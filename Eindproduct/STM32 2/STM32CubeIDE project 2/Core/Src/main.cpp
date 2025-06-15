@@ -44,7 +44,8 @@ extern "C" {
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-static const char menuDag[] = "";
+char menuDag[32];
+uint16_t co2Waarde;
 
 
 /* USER CODE END PD */
@@ -152,9 +153,9 @@ int main(void)
      floatToStr1(temperatuur, tempStr);
      floatToStr1(luchtvochtigheid, humStr);
      buildScrollBufferFromString("    Welkom gebruiker", scrollCols, &len);
-       scrollBuffer32(scrollCols, len, 5);
+       scrollBuffer32(scrollCols, len, 45);
 
-     	 std::vector<uint8_t> Ids = { TEMPSENSOR, LUCHTVSENSOR, BUZZER};
+     	 std::vector<uint8_t> Ids = { TEMPSENSOR, LUCHTVSENSOR, BUZZER, LICHTKRANT, SPECIALBEHEERDISPLAY};
      	 i2c.I2CInit(Ids,  &buzzer);
      	 HAL_TIM_Base_Start_IT(&htim1);
      	 HAL_I2C_EnableListen_IT(&hi2c1);
@@ -184,12 +185,13 @@ int main(void)
 //	 	                  //HAL_UART_Transmit(&huart2, (uint8_t*)"Buzzer UIT\r\n", 12, HAL_MAX_DELAY);
 //	 	                  buzzer.zetUit();
 //	 	              }
+	    HAL_UART_Transmit(&huart2, (uint8_t*)menuDag, sizeof menuDag, HAL_MAX_DELAY);
 
 
 	  if (SHT3X_Read(&hi2c3, &temperatuur, &luchtvochtigheid) == HAL_OK) {
 		  floatToStr1(temperatuur, tempStr);
 		       floatToStr1(luchtvochtigheid, humStr);
-	 	       sprintf(buf, "    %s -- Temp: %sC, LV: %s%% ", menuDag, tempStr, humStr);
+	 	       sprintf(buf, "    %s -- Temp: %sC, LV: %s%% -- CO2: %d", menuDag, tempStr, humStr, co2Waarde);
 	 	       buildScrollBufferFromString(buf, scrollCols, &len);
 	 	       scrollBuffer32(scrollCols, len, 50);
 	  }
@@ -573,6 +575,18 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
        }
 
     }
+}
+
+void setMenuDag(const char* nieuwMenu) {
+    strncpy(menuDag, nieuwMenu, sizeof(menuDag) - 1);
+    menuDag[sizeof(menuDag) - 1] = '\0'; // Zorg dat het correct afgesloten is
+
+    HAL_UART_Transmit(&huart2, (uint8_t*)menuDag, sizeof menuDag, HAL_MAX_DELAY);
+}
+
+void setCO2Waarde(uint16_t nieuweCo2Waarde) {
+    co2Waarde = nieuweCo2Waarde;
+
 }
 /* USER CODE END 4 */
 

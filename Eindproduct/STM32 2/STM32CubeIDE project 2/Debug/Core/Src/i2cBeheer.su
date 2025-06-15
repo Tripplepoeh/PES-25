@@ -13,13 +13,13 @@ C:\STM32CubeIDE_1.17.0\STM32CubeIDE\plugins\com.st.stm32cube.ide.mcu.externaltoo
 C:\STM32CubeIDE_1.17.0\STM32CubeIDE\plugins\com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.13.3.rel1.win32_1.0.0.202411081344\tools\bin/../lib/gcc/arm-none-eabi/13.3.1/../../../../arm-none-eabi/include/c++/13.3.1/bits/stl_vector.h:531:7:std::vector<_Tp, _Alloc>::vector() [with _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]	16	static
 C:\STM32CubeIDE_1.17.0\STM32CubeIDE\plugins\com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.13.3.rel1.win32_1.0.0.202411081344\tools\bin/../lib/gcc/arm-none-eabi/13.3.1/../../../../arm-none-eabi/include/c++/13.3.1/bits/stl_tree.h:930:7:std::_Rb_tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::_Rb_tree() [with _Key = unsigned char; _Val = unsigned char; _KeyOfValue = std::_Identity<unsigned char>; _Compare = std::less<unsigned char>; _Alloc = std::allocator<unsigned char>]	16	static
 C:\STM32CubeIDE_1.17.0\STM32CubeIDE\plugins\com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.13.3.rel1.win32_1.0.0.202411081344\tools\bin/../lib/gcc/arm-none-eabi/13.3.1/../../../../arm-none-eabi/include/c++/13.3.1/bits/stl_set.h:169:7:std::set<_Key, _Compare, _Alloc>::set() [with _Key = unsigned char; _Compare = std::less<unsigned char>; _Alloc = std::allocator<unsigned char>]	16	static
-../Core/Src/i2cBeheer.cpp:16:1:I2CBeheer::I2CBeheer()	16	static
-../Core/Src/i2cBeheer.cpp:22:6:void I2CBeheer::I2CInit(std::vector<unsigned char>, Buzzer*)	56	static
-../Core/Src/i2cBeheer.cpp:32:6:void I2CBeheer::ProcessReceivedData(uint8_t*, uint16_t)	24	static
-../Core/Src/i2cBeheer.cpp:41:6:void I2CBeheer::voerUit(uint8_t*, uint16_t)	32	static
-../Core/Src/i2cBeheer.cpp:67:6:void I2CBeheer::setBerichtKlaar()	64	static
-../Core/Src/i2cBeheer.cpp:110:16:const uint8_t* I2CBeheer::getBericht() const	16	static
-../Core/Src/i2cBeheer.cpp:114:9:uint8_t I2CBeheer::getBerichtLength() const	16	static
+../Core/Src/i2cBeheer.cpp:18:1:I2CBeheer::I2CBeheer()	16	static
+../Core/Src/i2cBeheer.cpp:24:6:void I2CBeheer::I2CInit(std::vector<unsigned char>, Buzzer*)	56	static
+../Core/Src/i2cBeheer.cpp:34:6:void I2CBeheer::ProcessReceivedData(uint8_t*, uint16_t)	24	static
+../Core/Src/i2cBeheer.cpp:43:6:void I2CBeheer::voerUit(uint8_t*, uint16_t)	112	static
+../Core/Src/i2cBeheer.cpp:106:6:void I2CBeheer::setBerichtKlaar()	64	static
+../Core/Src/i2cBeheer.cpp:150:16:const uint8_t* I2CBeheer::getBericht() const	16	static
+../Core/Src/i2cBeheer.cpp:154:9:uint8_t I2CBeheer::getBerichtLength() const	16	static
 C:\STM32CubeIDE_1.17.0\STM32CubeIDE\plugins\com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.13.3.rel1.win32_1.0.0.202411081344\tools\bin/../lib/gcc/arm-none-eabi/13.3.1/../../../../arm-none-eabi/include/c++/13.3.1/bits/stl_vector.h:137:2:std::_Vector_base<_Tp, _Alloc>::_Vector_impl::_Vector_impl() [with _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]	24	static
 C:\STM32CubeIDE_1.17.0\STM32CubeIDE\plugins\com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.13.3.rel1.win32_1.0.0.202411081344\tools\bin/../lib/gcc/arm-none-eabi/13.3.1/../../../../arm-none-eabi/include/c++/13.3.1/bits/stl_tree.h:669:4:std::_Rb_tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::_Rb_tree_impl<_Key_compare, <anonymous> >::_Rb_tree_impl() [with _Key_compare = std::less<unsigned char>; bool <anonymous> = true; _Key = unsigned char; _Val = unsigned char; _KeyOfValue = std::_Identity<unsigned char>; _Compare = std::less<unsigned char>; _Alloc = std::allocator<unsigned char>]	24	static
 C:\STM32CubeIDE_1.17.0\STM32CubeIDE\plugins\com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.13.3.rel1.win32_1.0.0.202411081344\tools\bin/../lib/gcc/arm-none-eabi/13.3.1/../../../../arm-none-eabi/include/c++/13.3.1/bits/vector.tcc:210:5:std::vector<_Tp, _Alloc>& std::vector<_Tp, _Alloc>::operator=(const std::vector<_Tp, _Alloc>&) [with _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]	96	static

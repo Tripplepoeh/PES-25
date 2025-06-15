@@ -55,6 +55,8 @@ void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
 void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
+void setMenuDag(const char* nieuwMenu);
+void setCO2Waarde(uint16_t nieuweCo2Waarde);
 
 /* USER CODE END EFP */
 
