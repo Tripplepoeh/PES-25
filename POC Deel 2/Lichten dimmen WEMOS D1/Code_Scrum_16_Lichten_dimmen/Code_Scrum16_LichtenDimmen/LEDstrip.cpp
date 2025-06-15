@@ -6,7 +6,7 @@
 // Analoge pin voor de druksensor
 #define Druk_Sensor A0
 // Aantal LEDs in de strip
-#define NUM_LEDS 9
+#define NUM_LEDS 10
 // Standaard helderheid van de LEDs
 #define BRIGHTNESS 64
 // Type LEDstrip
@@ -68,16 +68,18 @@ void LEDstrip::update() {
 
 void LEDstrip::lichtUit() {
     for (int i = 0; i < _numLeds; i++) {
-        _leds[i] = CRGB::Black;
+        _leds[i] = CRGB(40,40,40);
     }
     FastLED.show();
 }
 
 void LEDstrip::LichtDimmen() {
-    for (int i = 0; i < _numLeds; i++) {
-        _leds[i] = CRGB::Red;
+    for (int brightness = 255; brightness >= 40; brightness -= 5) {
+      for (int i = 0; i < _numLeds; i++) {
+          _leds[i] = CRGB(brightness, 0,0);
+      }
+      FastLED.show();
     }
-    FastLED.show();
 }
 
 void LEDstrip::lichtAan() {
