@@ -29,7 +29,8 @@ In het ontwerp hieronder is al een overzicht te zien welke componenten aan welke
 
 ## Ontwerp
 ontwerp \
-![ontwerpPes drawio](https://github.com/user-attachments/assets/030f37c0-5e71-45e6-b7ee-da5db4e126d3)
+![ontwerpPes drawio (1)](https://github.com/user-attachments/assets/55c98f5d-7a96-45fe-adb3-b6812ef53c6c)
+
 
 Geheel klassendiagram \
 ![image](https://github.com/user-attachments/assets/6a0dc9fe-b980-4308-b641-ec8e1042027e)
