@@ -13,22 +13,15 @@
 #include <cstdint>
 #include <vector>
 
-class lamp;
-class noodknop;
-
-class RFIDSensor;
 class deurknop;
-class deurServo;
 class deurServotest;
 
 
 class I2CBeheer {
 public:
     I2CBeheer();
-//   void I2CInit(std::vector<uint8_t> sensorIds, lamp* gl, noodknop* nk);
-    //void I2CInit(std::vector<uint8_t> Ids, RFIDSensor *rf, deurknop *kn, deurServo *ser);
-    //void I2CInit(std::vector<uint8_t> Ids, /*RFIDSensor *rf*/ deurknop *kn, deurServo *ser);
-    void I2CInit(std::vector<uint8_t> Ids,  deurknop *kn, lamp* gl, deurServotest *ser);
+
+    void I2CInit(std::vector<uint8_t> Ids,  deurknop *kn, deurServotest *ser);
 
     void ProcessReceivedData(uint8_t *data, uint16_t size);
     const uint8_t* getBericht() const;
@@ -41,10 +34,7 @@ private:
     std::set<uint8_t> actuatorIds;
     void voerUit(uint8_t *data, uint16_t size);
     void setBerichtKlaar();
-    lamp* geelLamp;
-    noodknop* noodk;
 
-    RFIDSensor *rfid;
     deurknop *knop;
     deurServotest *servo;
 };
