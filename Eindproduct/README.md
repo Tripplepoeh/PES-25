@@ -40,10 +40,12 @@ ontwerp \
 
 
 Geheel klassendiagram \
-![image](https://github.com/user-attachments/assets/6a0dc9fe-b980-4308-b641-ec8e1042027e)
+![goedePES_klassendiagram](https://github.com/user-attachments/assets/0b8c93ba-060a-44a3-a641-7a96ea0392bb)
+
 
 Simplistische klassendiagram \
-![image](https://github.com/user-attachments/assets/a0dd0d7b-f333-4c67-96d1-ffc5b0f66a43)
+![simpleKlassendiagram_projectPES](https://github.com/user-attachments/assets/30e41bd0-a7b7-4694-8fe7-283d5a7f2e84)
+
 
 
 # Authors
